@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏结束</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        /* ========== 庆祝动画 - 彩带效果 ========== */
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            animation: confettiFall 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                opacity: 1;
+                transform: translateY(-100vh) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        /* ========== 容器 ========== */
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 30px;
+            padding: 60px 70px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+            position: relative;
+            z-index: 10;
+            animation: containerAppear 0.6s ease-out;
+        }
+
+        @keyframes containerAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* ========== 页面标题 ========== */
+        .page-title {
+            font-size: 64px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+            letter-spacing: 6px;
+            animation: titleCelebrate 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleCelebrate {
+            from {
+                transform: scale(1);
+                text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 215, 0, 0.3);
+            }
+            to {
+                transform: scale(1.05);
+                text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4), 0 0 50px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        /* ========== 结果展示区域 ========== */
+        .result-section {
+            margin-bottom: 50px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            font-size: 32px;
+            color: #FFF;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            animation: resultSlideIn 0.5s ease-out backwards;
+        }
+
+        /* 结果项依次淡入 */
+        .result-item:nth-child(1) { animation-delay: 0.1s; }
+        .result-item:nth-child(2) { animation-delay: 0.2s; }
+        .result-item:nth-child(3) { animation-delay: 0.3s; }
+        .result-item:nth-child(4) { animation-delay: 0.4s; }
+        .result-item:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes resultSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .result-label {
+            color: #FFE082;
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* 最终得分特殊样式 */
+        .result-item.final-score {
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.3), rgba(255, 193, 7, 0.2));
+            border: 3px solid #FFD700;
+            animation: resultSlideIn 0.5s ease-out 0.5s backwards, scorePulse 1.5s ease-in-out 1s infinite;
+        }
+
+        @keyframes scorePulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        /* ========== 按钮区域 ========== */
+        .buttons-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 22px 60px;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            animation: btnAppear 0.5s ease-out 0.8s backwards;
+        }
+
+        @keyframes btnAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 再玩一次按钮 */
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.08);
+            box-shadow: 0 10px 35px rgba(255, 215, 0, 0.5);
+        }
+
+        /* 返回首页按钮 */
+        .btn-secondary {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #A00, #8E0E00);
+            transform: scale(1.08);
+            box-shadow: 0 10px 35px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ========== 烟花效果 ========== */
+        .firework {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: fireworkExplode 2s ease-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fireworkExplode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(20);
+                opacity: 0;
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 700px) {
+            .container {
+                padding: 40px 30px;
+            }
+            .page-title {
+                font-size: 48px;
+            }
+            .result-item {
+                font-size: 24px;
+                padding: 15px 20px;
+            }
+            .buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 彩带效果容器 -->
+    <div id="confettiContainer"></div>
+
+    <!-- 烟花效果容器 -->
+    <div id="fireworkContainer"></div>
+
+    <!-- 结果容器 -->
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="page-title">游戏结束</h1>
+
+        <!-- 结果展示 -->
+        <div class="result-section">
+            <div class="result-item">
+                <span class="result-label">总题数</span>
+                <span class="result-value" id="totalQuestions">0 题</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">答对题数</span>
+                <span class="result-value" id="correctQuestions">0 题</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">跳过题数</span>
+                <span class="result-value" id="skippedQuestions">0 题</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">最终得分</span>
+                <span class="result-value" id="finalScore">0 分</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">正确率</span>
+                <span class="result-value" id="accuracy">0.0%</span>
+            </div>
+        </div>
+
+        <!-- 按钮区域 -->
+        <div class="buttons-container">
+            <a href="#" class="btn btn-primary" id="btnReplay">再玩一次</a>
+            <a href="index.html" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        // ========== 创建彩带效果 ==========
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9', '#FF9F43'];
+
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 4 + 's';
+                confetti.style.animationDuration = (3 + Math.random() * 2) + 's';
+                container.appendChild(confetti);
+            }
+        }
+
+        // ========== 创建烟花效果 ==========
+        function createFireworks() {
+            const container = document.getElementById('fireworkContainer');
+            const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+
+            for (let i = 0; i < 10; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = (20 + Math.random() * 60) + 'vw';
+                firework.style.top = (20 + Math.random() * 40) + 'vh';
+                firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.animationDelay = (i * 0.3) + 's';
+                container.appendChild(firework);
+            }
+        }
+
+        // ========== 显示结果数据 ==========
+        function displayResults() {
+            // 从localStorage读取游戏数据
+            const total = parseInt(localStorage.getItem('game1_total')) || 0;
+            const correct = parseInt(localStorage.getItem('game1_finalCorrect')) || 0;
+            const skipped = parseInt(localStorage.getItem('game1_finalSkipped')) || 0;
+            const score = parseInt(localStorage.getItem('game1_finalScore')) || 0;
+
+            // 计算正确率（保留1位小数）
+            const accuracy = total > 0 ? ((correct / total) * 100).toFixed(1) : '0.0';
+
+            // 更新显示
+            document.getElementById('totalQuestions').textContent = total + ' 题';
+            document.getElementById('correctQuestions').textContent = correct + ' 题';
+            document.getElementById('skippedQuestions').textContent = skipped + ' 题';
+            document.getElementById('finalScore').textContent = score + ' 分';
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // ========== 再玩一次 - 清空游戏数据 ==========
+        function replayGame() {
+            // 清空localStorage中的游戏数据
+            localStorage.removeItem('game1_currentIndex');
+            localStorage.removeItem('game1_score');
+            localStorage.removeItem('game1_skipped');
+            localStorage.removeItem('game1_correct');
+            localStorage.removeItem('game1_shuffled');
+            localStorage.removeItem('game1_total');
+            localStorage.removeItem('game1_finalScore');
+            localStorage.removeItem('game1_finalCorrect');
+            localStorage.removeItem('game1_finalSkipped');
+
+            // 跳转到游戏页面
+            window.location.href = 'game1-play.html';
+        }
+
+        // ========== 页面加载完成后初始化 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            // 页面淡入效果
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+
+            // 显示结果数据
+            displayResults();
+
+            // 创建庆祝动画
+            createConfetti();
+            createFireworks();
+
+            // 绑定再玩一次按钮
+            document.getElementById('btnReplay').addEventListener('click', replayGame);
+        });
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

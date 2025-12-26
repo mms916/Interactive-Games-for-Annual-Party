@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年会互动小游戏</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow-x: hidden;
+        }
+
+        /* ========== 页面标题 ========== */
+        .page-title {
+            font-size: 72px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5),
+                         0 0 30px rgba(255, 215, 0, 0.3);
+            margin-bottom: 60px;
+            letter-spacing: 8px;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5),
+                             0 0 30px rgba(255, 215, 0, 0.3);
+            }
+            to {
+                text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5),
+                             0 0 50px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        /* ========== 卡片容器（2×2网格布局） ========== */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 50px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* ========== 游戏卡片 ========== */
+        .game-card {
+            background: linear-gradient(145deg, #D32F2F, #B71C1C);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border: 3px solid #FFD700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 320px;
+        }
+
+        /* 卡片悬停效果：放大 + 阴影加深 */
+        .game-card:hover {
+            transform: scale(1.05) translateY(-8px);
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.4);
+            border-color: #FFF;
+        }
+
+        /* ========== 卡片图标 ========== */
+        .card-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        /* 不同卡片图标动画延迟 */
+        .game-card:nth-child(1) .card-icon { animation-delay: 0s; }
+        .game-card:nth-child(2) .card-icon { animation-delay: 0.5s; }
+        .game-card:nth-child(3) .card-icon { animation-delay: 1s; }
+        .game-card:nth-child(4) .card-icon { animation-delay: 1.5s; }
+
+        @keyframes iconFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ========== 卡片标题 ========== */
+        .card-title {
+            font-size: 38px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ========== 卡片描述 ========== */
+        .card-desc {
+            font-size: 24px;
+            color: #FFE082;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ========== 卡片按钮 ========== */
+        .card-btn {
+            padding: 16px 45px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #8E0E00;
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .card-btn:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 40px;
+            opacity: 0.3;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 10%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 20%; right: 8%; animation-delay: 1s; }
+        .decoration-3 { bottom: 15%; left: 10%; animation-delay: 2s; }
+        .decoration-4 { bottom: 25%; right: 5%; animation-delay: 3s; }
+        .decoration-5 { top: 50%; left: 3%; animation-delay: 4s; }
+        .decoration-6 { top: 40%; right: 3%; animation-delay: 5s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 1100px) {
+            .page-title {
+                font-size: 56px;
+                margin-bottom: 40px;
+            }
+            .cards-container {
+                gap: 35px;
+                max-width: 900px;
+            }
+            .game-card {
+                padding: 30px 20px;
+                min-height: 280px;
+            }
+            .card-title {
+                font-size: 32px;
+            }
+            .card-desc {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                gap: 30px;
+                max-width: 500px;
+            }
+            .game-card {
+                min-height: auto;
+            }
+            .page-title {
+                font-size: 42px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🎊</div>
+    <div class="decoration decoration-2">🎉</div>
+    <div class="decoration decoration-3">🧧</div>
+    <div class="decoration decoration-4">🏮</div>
+    <div class="decoration decoration-5">🎆</div>
+    <div class="decoration decoration-6">✨</div>
+
+    <!-- 页面标题 -->
+    <h1 class="page-title">年会互动小游戏</h1>
+
+    <!-- 卡片容器（2×2网格） -->
+    <div class="cards-container">
+        <!-- 游戏1卡片：谐音梗挑战 -->
+        <div class="game-card">
+            <div class="card-icon">🎯</div>
+            <h2 class="card-title">谐音梗挑战</h2>
+            <p class="card-desc">看图猜谐音，脑洞大挑战</p>
+            <a href="game1-rule.html" class="card-btn">进入游戏</a>
+        </div>
+
+        <!-- 游戏2卡片：看emoji猜成语 -->
+        <div class="game-card">
+            <div class="card-icon">🤔</div>
+            <h2 class="card-title">看emoji猜成语</h2>
+            <p class="card-desc">通过emoji猜出成语</p>
+            <a href="game2-rule.html" class="card-btn">进入游戏</a>
+        </div>
+
+        <!-- 游戏3卡片：你画我猜 -->
+        <div class="game-card">
+            <div class="card-icon">🎨</div>
+            <h2 class="card-title">你画我猜</h2>
+            <p class="card-desc">根据关键词作画，队友猜词</p>
+            <a href="game3-rule.html" class="card-btn">进入游戏</a>
+        </div>
+
+        <!-- 游戏4卡片：谁是卧底 -->
+        <div class="game-card">
+            <div class="card-icon">🕵️</div>
+            <h2 class="card-title">谁是卧底</h2>
+            <p class="card-desc">找出人群中的卧底</p>
+            <a href="game4-rule.html" class="card-btn">进入游戏</a>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后添加淡入动画
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

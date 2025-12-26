@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>看emoji猜成语</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 40px;
+        }
+
+        /* ========== 顶部状态栏 ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 40px;
+            padding: 20px 40px;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.9), rgba(183, 28, 28, 0.9));
+            border-radius: 20px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-name {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .question-info {
+            font-size: 28px;
+            color: #FFF;
+        }
+
+        /* ========== 游戏区域 ========== */
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* ========== Emoji显示区域 ========== */
+        .emoji-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            animation: emojiFadeIn 0.5s ease-out;
+        }
+
+        @keyframes emojiFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .emoji-display {
+            font-size: 120px;
+            letter-spacing: 15px;
+            text-align: center;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+        }
+
+        .emoji-image {
+            max-width: 800px;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        /* ========== 答案区域 ========== */
+        .answer-area {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .answer-text {
+            font-size: 52px;
+            font-weight: bold;
+            color: #FFD700;
+            padding: 20px 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 3px solid #FFD700;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease;
+        }
+
+        .answer-text.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ========== 控制按钮区域 ========== */
+        .controls-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .control-btn {
+            padding: 18px 40px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-show {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: #FFF;
+        }
+
+        .btn-red {
+            background: linear-gradient(145deg, #F44336, #D32F2F);
+            color: #FFF;
+        }
+
+        .btn-blue {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: #FFF;
+        }
+
+        .btn-next {
+            background: linear-gradient(145deg, #FF9800, #F57C00);
+            color: #FFF;
+        }
+
+        .btn-end {
+            background: linear-gradient(145deg, #F44336, #D32F2F);
+            color: #FFF;
+        }
+
+        .btn-home {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .control-btn:hover:not(:disabled), .btn-home:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========== 计分板 ========== */
+        .scoreboard {
+            display: flex;
+            gap: 80px;
+            justify-content: center;
+            padding: 25px 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-name {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .team-name.red {
+            color: #FF6B6B;
+        }
+
+        .team-name.blue {
+            color: #64B5F6;
+        }
+
+        .team-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* ========== 加分动画 ========== */
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #FFD700; }
+            100% { transform: scale(1); }
+        }
+
+        .score-pop {
+            animation: scorePop 0.4s ease-out;
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 900px) {
+            .emoji-display {
+                font-size: 80px;
+                letter-spacing: 8px;
+            }
+            .scoreboard {
+                gap: 40px;
+                padding: 20px 40px;
+            }
+            .team-name {
+                font-size: 24px;
+            }
+            .team-score {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .emoji-display {
+                font-size: 60px;
+                letter-spacing: 5px;
+            }
+            .answer-text {
+                font-size: 36px;
+                padding: 15px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="header">
+        <div class="game-name">看emoji猜成语</div>
+        <div class="question-info">第 <span id="currentNum">1</span>/20 题</div>
+    </div>
+
+    <!-- 游戏区域 -->
+    <div class="game-area">
+        <!-- Emoji显示区域 -->
+        <div class="emoji-container">
+            <img id="emojiImage" class="emoji-image" src="" alt="Emoji题目" onerror="this.style.display='none'; document.getElementById('emojiDisplay').style.display='block';">
+            <div class="emoji-display" id="emojiDisplay" style="display: none;"></div>
+        </div>
+
+        <!-- 答案区域 -->
+        <div class="answer-area">
+            <div class="answer-text" id="answerText"></div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="controls-area">
+            <button class="control-btn btn-show" id="btnShow" onclick="showAnswer()">显示答案</button>
+            <button class="control-btn btn-red" id="btnRed" onclick="addRedScore()">红队+1分</button>
+            <button class="control-btn btn-blue" id="btnBlue" onclick="addBlueScore()">蓝队+1分</button>
+            <button class="control-btn btn-next" id="btnNext" onclick="nextQuestion()">下一题</button>
+            <button class="control-btn btn-end" onclick="endGame()">结束游戏</button>
+            <a href="index.html" class="control-btn btn-home">返回首页</a>
+        </div>
+
+        <!-- 计分板 -->
+        <div class="scoreboard">
+            <div class="score-item">
+                <div class="team-name red">红队</div>
+                <div class="team-score" id="redScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="team-name blue">蓝队</div>
+                <div class="team-score" id="blueScore">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 配置常量 ==========
+        const EMOJI_PATH = 'images/game2/';  // emoji图片基础路径
+        const TOTAL_QUESTIONS = 20;  // 总题数
+
+        // ========== 题库数据 ==========
+        const idioms = [
+            {id: 1, image: "e1.jpg", emoji: "🌟🎋🀄💖", answer: "心想事成"},
+            {id: 2, image: "e2.jpg", emoji: "🧧⭐🔭✨", answer: "福星高照"},
+            {id: 3, image: "e3.jpg", emoji: "🧘‍♂️💫🧚‍♂️🌟", answer: "神采奕奕"},
+            {id: 4, image: "e4.jpg", emoji: "🚶‍♂️📈🪜🆙", answer: "步步高升"},
+            {id: 5, image: "e5.jpg", emoji: "😄⬆️👀🌿", answer: "喜上眉梢"},
+            {id: 6, image: "e6.jpg", emoji: "📚🌸🚪👨‍👩‍👧‍👦", answer: "书香门第"},
+            {id: 7, image: "e7.jpg", emoji: "🙈👂👥👀", answer: "掩人耳目"},
+            {id: 8, image: "e8.jpg", emoji: "❤️🔦💬🤐", answer: "心照不宣"},
+            {id: 9, image: "e9.jpg", emoji: "🤝💑💪⛰️", answer: "携手并肩"},
+            {id: 10, image: "e10.jpg", emoji: "🔨🔩🔊🎵", answer: "一锤定音"},
+            {id: 11, image: "e11.jpg", emoji: "9️⃣9️⃣➡️1️⃣", answer: "九九归一"},
+            {id: 12, image: "e12.jpg", emoji: "☁️👋☀️🌤️", answer: "拨云见日"},
+            {id: 13, image: "e13.jpg", emoji: "🏇😰⬇️🚫", answer: "骑虎难下"},
+            {id: 14, image: "e14.jpg", emoji: "👕🍚👨‍👩‍👧‍👦", answer: "衣食父母"},
+            {id: 15, image: "e15.jpg", emoji: "🐴🐴🐯🐯", answer: "马马虎虎"},
+            {id: 16, image: "e16.jpg", emoji: "🏃‍♂️💨🌸🌸🌸", answer: "逃之夭夭"},
+            {id: 17, image: "e17.jpg", emoji: "🌿🌳🛡️⚔️", answer: "草木皆兵"},
+            {id: 18, image: "e18.jpg", emoji: "💧🌸🎋💯", answer: "流芳百世"},
+            {id: 19, image: "e19.jpg", emoji: "💧🚿🔒💧", answer: "滴水不漏"},
+            {id: 20, image: "e20.jpg", emoji: "🧹🧊☁️⚪", answer: "清清白白"},
+            {id: 21, image: "e21.jpg", emoji: "🪡🚫💨🪵", answer: "纹丝不动"},
+            {id: 22, image: "e22.jpg", emoji: "🔥🌳🎆💥", answer: "火树银花"},
+            {id: 23, image: "e23.jpg", emoji: "3️⃣🏠🛖🌾", answer: "三顾茅庐"},
+            {id: 24, image: "e24.jpg", emoji: "🦗💪🚗⚔️", answer: "螳臂当车"},
+            {id: 25, image: "e25.jpg", emoji: "🟢🍑🎋🐴", answer: "青梅竹马"},
+            {id: 26, image: "e26.jpg", emoji: "🔔⛰️💎🌺", answer: "钟灵毓秀"},
+            {id: 27, image: "e27.jpg", emoji: "🏮🔔🎊🎉", answer: "张灯结彩"},
+            {id: 28, image: "e28.jpg", emoji: "🔥😰⏰🚨", answer: "燃眉之急"},
+            {id: 29, image: "e29.jpg", emoji: "💀➡️🔄💚", answer: "死而复生"},
+            {id: 30, image: "e30.jpg", emoji: "😴🍽️😰😣", answer: "寝食难安"},
+            {id: 31, image: "e31.jpg", emoji: "🧧⭐🔭✨", answer: "吉星高照"},
+            {id: 32, image: "e32.jpg", emoji: "🏮🔔🎊🎉", answer: "张灯结彩"},
+            {id: 33, image: "e33.jpg", emoji: "🪵🌳➡️🌱", answer: "枯木逢春"},
+            {id: 34, image: "e34.jpg", emoji: "😍👁️🌺🌺", answer: "赏心悦目"},
+            {id: 35, image: "e35.jpg", emoji: "🐉⚔️🐅⚔️", answer: "龙争虎斗"},
+            {id: 36, image: "e36.jpg", emoji: "❤️❤️📍", answer: "心心相印"},
+            {id: 37, image: "e37.jpg", emoji: "🤲🆓🙋‍♂️💚", answer: "舍己救人"},
+            {id: 38, image: "e38.jpg", emoji: "👥🎯🏹👍", answer: "众望所归"},
+            {id: 39, image: "e39.jpg", emoji: "🇨🇳🌷🌸💎", answer: "国色天香"},
+            {id: 40, image: "e40.jpg", emoji: "⛰️🔪🔥🌊", answer: "刀山火海"},
+            {id: 41, image: "e41.jpg", emoji: "🏃‍♂️🔄🏠🌾", answer: "背井离乡"},
+            {id: 42, image: "e42.jpg", emoji: "🏛️🏛️👊👊", answer: "堂堂正正"},
+            {id: 43, image: "e43.jpg", emoji: "⬅️🧠💭➡️", answer: "左思右想"},
+            {id: 44, image: "e44.jpg", emoji: "🌾🌼💨🌸", answer: "金桂飘香"},
+            {id: 45, image: "e45.jpg", emoji: "🐦🗣️🌸🌸", answer: "鸟语花香"},
+            {id: 46, image: "e46.jpg", emoji: "1️⃣✍️💰💰", answer: "一字千金"},
+            {id: 47, image: "e47.jpg", emoji: "🐕😰🦘🧱", answer: "狗急跳墙"},
+            {id: 48, image: "e48.jpg", emoji: "👀⬅️😳👀➡️", answer: "瞻前顾后"},
+            {id: 49, image: "e49.jpg", emoji: "🌅⛰️📉🌇", answer: "日薄西山"},
+            {id: 50, image: "e50.jpg", emoji: "💀🚫😌💰", answer: "死不足惜"},
+            {id: 51, image: "e51.jpg", emoji: "🖐️☝️❤️🔗", answer: "十指连心"},
+            {id: 52, image: "e52.jpg", emoji: "🐎➡️🏆✅", answer: "马到成功"},
+            {id: 53, image: "e53.jpg", emoji: "👀🙏🐉✈️", answer: "望子成龙"},
+            {id: 54, image: "e54.jpg", emoji: "🇨🇳🎖️🚫👥", answer: "国士无双"},
+            {id: 55, image: "e55.jpg", emoji: "😱🌊⚡🌀", answer: "惊涛巨浪"},
+            {id: 56, image: "e56.jpg", emoji: "3️⃣👥🐅🐅", answer: "三人成虎"},
+            {id: 57, image: "e57.jpg", emoji: "💎🔨🚪🔓", answer: "金石可开"},
+            {id: 58, image: "e58.jpg", emoji: "2️⃣🧒❓🧒", answer: "两小无猜"},
+            {id: 59, image: "e59.jpg", emoji: "👻🔨🎭💎", answer: "鬼斧神工"},
+            {id: 60, image: "e60.jpg", emoji: "🏛️🧍‍♀️🌸🌸", answer: "亭亭玉立"},
+            {id: 61, image: "e61.jpg", emoji: "🐯🧠🐯🧠", answer: "虎头虎脑"},
+            {id: 62, image: "e62.jpg", emoji: "🖊️🏃‍♂️🐉🐍", answer: "笔走龙蛇"},
+            {id: 63, image: "e63.jpg", emoji: "🎨🫓🍞😋", answer: "画饼充饥"},
+            {id: 64, image: "e64.jpg", emoji: "🐘😄🎺🎺", answer: "得意洋洋"},
+            {id: 65, image: "e65.jpg", emoji: "🌸🌸🌍🌍", answer: "花花世界"},
+            {id: 66, image: "e66.jpg", emoji: "☀️🔥🔥🔥", answer: "烈日炎炎"},
+            {id: 67, image: "e67.jpg", emoji: "⚡🌩️🔊🌧️", answer: "电闪雷鸣"},
+            {id: 68, image: "e68.jpg", emoji: "😎☀️🔥🐔", answer: "骄阳似火"},
+            {id: 69, image: "e69.jpg", emoji: "👀💦🌊👁️", answer: "望穿秋水"},
+            {id: 70, image: "e70.jpg", emoji: "👹👺👻🤡", answer: "妖魔鬼怪"},
+            {id: 71, image: "e71.jpg", emoji: "🐉🐉🚫👑", answer: "群龙无首"},
+            {id: 72, image: "e72.jpg", emoji: "🐺🔥🆙4️⃣", answer: "狼烟四起"},
+            {id: 73, image: "e73.jpg", emoji: "🍈⬆️🍑⬇️", answer: "浮瓜沉李"},
+            {id: 74, image: "e74.jpg", emoji: "✋5️⃣➡️1️⃣0️⃣", answer: "一五一十"},
+            {id: 75, image: "e75.jpg", emoji: "🚫💰💎💎", answer: "无价之宝"},
+            {id: 76, image: "e76.jpg", emoji: "👀➡️☁️💨", answer: "过眼云烟"},
+            {id: 77, image: "e77.jpg", emoji: "😄🌿🌿🌅", answer: "欣欣向荣"},
+            {id: 78, image: "e78.jpg", emoji: "📅➕🌙➕", answer: "日积月累"},
+            {id: 79, image: "e79.jpg", emoji: "👀🔎➡️1️⃣🐆", answer: "可见一斑"},
+            {id: 80, image: "e80.jpg", emoji: "1️⃣0️⃣0️⃣0️⃣🎋", answer: "千秋万代"},
+            {id: 81, image: "e81.jpg", emoji: "📩😎✅🦖", answer: "信以为真"},
+            {id: 82, image: "e82.jpg", emoji: "🧡⭕🧡⭕🧡", answer: "全心全意"},
+            {id: 83, image: "e83.jpg", emoji: "🗣️❤️📏📐", answer: "语重心长"},
+            {id: 84, image: "e84.jpg", emoji: "🚩🏃‍♂️🏰🔙", answer: "班师回朝"},
+            {id: 85, image: "e85.jpg", emoji: "✋✋🌫️🌫️", answer: "两手空空"},
+            {id: 86, image: "e86.jpg", emoji: "📚🎓🚫🎯", answer: "博而不精"},
+            {id: 87, image: "e87.jpg", emoji: "❤️🚫🙌👐", answer: "爱不释手"},
+            {id: 88, image: "e88.jpg", emoji: "✍️✊✍️🦶", answer: "动手动脚"},
+            {id: 89, image: "e89.jpg", emoji: "🔄🔄🔄🔄", answer: "生生不息"},
+            {id: 90, image: "e90.jpg", emoji: "📏⏺️🤔🆚", answer: "诸如此比"},
+            {id: 91, image: "e91.jpg", emoji: "🎨🐉👁️✨", answer: "画龙点睛"},
+            {id: 92, image: "e92.jpg", emoji: "🌸✅🌕✅", answer: "花好月圆"},
+            {id: 93, image: "e93.jpg", emoji: "🛤️🌸🌺🎀", answer: "前程似锦"},
+            {id: 94, image: "e94.jpg", emoji: "👀❤️🔔💕", answer: "一见钟情"},
+            {id: 95, image: "e95.jpg", emoji: "😊🌸🌸🌸", answer: "人面桃花"},
+            {id: 96, image: "e96.jpg", emoji: "1️⃣0️⃣0️⃣💯🎯", answer: "百发百中"},
+            {id: 97, image: "e97.jpg", emoji: "🌸🌙⬇️🌙", answer: "花前月下"},
+            {id: 98, image: "e98.jpg", emoji: "👀😳💬❤️", answer: "眉目传情"},
+            {id: 99, image: "e99.jpg", emoji: "🐔✈️🥚💥", answer: "鸡飞蛋打"},
+            {id: 100, image: "e100.jpg", emoji: "🎨🐍➕🦶", answer: "画蛇添足"}
+        ];
+
+        // ========== 游戏状态变量 ==========
+        let currentIndex = 0;  // 当前题号索引
+        let redScore = 0;  // 红队得分
+        let blueScore = 0;  // 蓝队得分
+        let shuffledQuestions = [];  // 打乱后的题目顺序
+        let answerShown = false;  // 答案是否已显示
+
+        // ========== 初始化游戏 ==========
+        function initGame() {
+            // 检查是否已有进行中的游戏
+            const savedIndex = localStorage.getItem('game2_currentIndex');
+            const savedRedScore = localStorage.getItem('game2_redScore');
+            const savedBlueScore = localStorage.getItem('game2_blueScore');
+            const savedShuffled = localStorage.getItem('game2_shuffled');
+
+            if (savedIndex !== null) {
+                // 恢复游戏状态
+                currentIndex = parseInt(savedIndex);
+                redScore = parseInt(savedRedScore);
+                blueScore = parseInt(savedBlueScore);
+                shuffledQuestions = JSON.parse(savedShuffled);
+            } else {
+                // 新游戏：从题库中随机抽取20道题并打乱顺序
+                const allIndices = [...Array(idioms.length).keys()];
+                shuffledQuestions = shuffleArray(allIndices).slice(0, TOTAL_QUESTIONS);
+                saveGameState();
+            }
+
+            loadQuestion();
+        }
+
+        // ========== 题目数组打乱算法 ==========
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // ========== 加载当前题目 ==========
+        function loadQuestion() {
+            if (currentIndex >= shuffledQuestions.length) {
+                // 游戏结束，跳转到结算页
+                endGame();
+                return;
+            }
+
+            const questionIndex = shuffledQuestions[currentIndex];
+            const idiom = idioms[questionIndex];
+
+            // 更新emoji显示（优先显示图片，失败则显示文字emoji）
+            const emojiImage = document.getElementById('emojiImage');
+            const emojiDisplay = document.getElementById('emojiDisplay');
+
+            // 触发淡入动画
+            const emojiContainer = document.querySelector('.emoji-container');
+            emojiContainer.style.animation = 'none';
+            setTimeout(() => {
+                emojiContainer.style.animation = 'emojiFadeIn 0.5s ease-out';
+            }, 10);
+
+            // 设置图片路径
+            emojiImage.src = EMOJI_PATH + idiom.image;
+            emojiImage.style.display = 'block';
+            emojiDisplay.style.display = 'none';
+
+            // 图片加载失败时显示emoji文字
+            emojiImage.onerror = function() {
+                this.style.display = 'none';
+                emojiDisplay.style.display = 'block';
+                emojiDisplay.textContent = idiom.emoji;
+            };
+
+            // 更新题号
+            document.getElementById('currentNum').textContent = currentIndex + 1;
+
+            // 更新分数显示
+            updateScoreDisplay();
+
+            // 重置答案显示
+            answerShown = false;
+            document.getElementById('answerText').textContent = idiom.answer;
+            document.getElementById('answerText').classList.remove('show');
+            document.getElementById('btnShow').disabled = false;
+        }
+
+        // ========== 更新分数显示 ==========
+        function updateScoreDisplay() {
+            document.getElementById('redScore').textContent = redScore;
+            document.getElementById('blueScore').textContent = blueScore;
+        }
+
+        // ========== 显示答案 ==========
+        function showAnswer() {
+            if (answerShown) return;
+            answerShown = true;
+            document.getElementById('answerText').classList.add('show');
+            document.getElementById('btnShow').disabled = true;
+        }
+
+        // ========== 红队加分 ==========
+        function addRedScore() {
+            if (!answerShown) {
+                showAnswer();
+            }
+            redScore++;
+            saveGameState();
+
+            // 加分动画
+            const scoreEl = document.getElementById('redScore');
+            scoreEl.classList.add('score-pop');
+            setTimeout(() => scoreEl.classList.remove('score-pop'), 400);
+
+            // 延迟后进入下一题
+            setTimeout(() => {
+                goToNextQuestion();
+            }, 1500);
+        }
+
+        // ========== 蓝队加分 ==========
+        function addBlueScore() {
+            if (!answerShown) {
+                showAnswer();
+            }
+            blueScore++;
+            saveGameState();
+
+            // 加分动画
+            const scoreEl = document.getElementById('blueScore');
+            scoreEl.classList.add('score-pop');
+            setTimeout(() => scoreEl.classList.remove('score-pop'), 400);
+
+            // 延迟后进入下一题
+            setTimeout(() => {
+                goToNextQuestion();
+            }, 1500);
+        }
+
+        // ========== 下一题（不加分） ==========
+        function nextQuestion() {
+            goToNextQuestion();
+        }
+
+        // ========== 跳转下一题 ==========
+        function goToNextQuestion() {
+            currentIndex++;
+            saveGameState();
+            loadQuestion();
+        }
+
+        // ========== 保存游戏状态到localStorage ==========
+        function saveGameState() {
+            localStorage.setItem('game2_currentIndex', currentIndex);
+            localStorage.setItem('game2_redScore', redScore);
+            localStorage.setItem('game2_blueScore', blueScore);
+            localStorage.setItem('game2_shuffled', JSON.stringify(shuffledQuestions));
+        }
+
+        // ========== 游戏结束 ==========
+        function endGame() {
+            // 保存最终分数
+            localStorage.setItem('game2_finalRedScore', redScore);
+            localStorage.setItem('game2_finalBlueScore', blueScore);
+            // 跳转到结算页
+            window.location.href = 'game2-result.html';
+        }
+
+        // ========== 页面加载完成后初始化 ==========
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

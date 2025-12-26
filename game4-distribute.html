@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词语分配 - 谁是卧底</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* ========== 容器 ========== */
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 30px;
+            padding: 50px 60px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+            text-align: center;
+        }
+
+        /* ========== 顶部信息 ========== */
+        .header {
+            margin-bottom: 50px;
+        }
+
+        .game-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .progress {
+            font-size: 36px;
+            color: #FFE082;
+        }
+
+        /* ========== 状态内容区 ========== */
+        .content-area {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        /* 状态A：准备查看 */
+        .prepare-text {
+            font-size: 56px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 20px;
+        }
+
+        .prepare-hint {
+            font-size: 28px;
+            color: #FFE082;
+        }
+
+        /* 状态B：显示词语 */
+        .word-display {
+            margin-bottom: 30px;
+        }
+
+        .word-text {
+            font-size: 140px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+            animation: wordPop 0.5s ease-out;
+        }
+
+        @keyframes wordPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .word-hint {
+            font-size: 32px;
+            color: #FFE082;
+            margin-top: 20px;
+        }
+
+        /* 白板样式 */
+        .word-text.blank {
+            font-size: 80px;
+            color: #AAA;
+        }
+
+        /* 状态C：分配完成 */
+        .complete-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 40px;
+        }
+
+        .role-info {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .role-item {
+            padding: 25px 35px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+
+        .role-item .label {
+            font-size: 24px;
+            color: #FFE082;
+            margin-bottom: 10px;
+        }
+
+        .role-item .count {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* ========== 按钮 ========== */
+        .btn {
+            padding: 18px 50px;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            min-width: 220px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: #FFF;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(145deg, #66BB6A, #4CAF50);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 30px;
+            opacity: 0.25;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 8%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 15%; right: 6%; animation-delay: 1.2s; }
+        .decoration-3 { bottom: 12%; left: 8%; animation-delay: 2.4s; }
+        .decoration-4 { bottom: 18%; right: 4%; animation-delay: 3.6s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(6deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 900px) {
+            .container {
+                padding: 35px 30px;
+            }
+            .word-text {
+                font-size: 100px;
+            }
+            .word-text.blank {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🕵️</div>
+    <div class="decoration decoration-2">🔍</div>
+    <div class="decoration decoration-3">🎭</div>
+    <div class="decoration decoration-4">🎪</div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 顶部信息 -->
+        <div class="header">
+            <h1 class="game-title">🕵️ 谁是卧底</h1>
+            <div class="progress" id="progressDisplay">1 / 6</div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content-area" id="contentArea">
+            <!-- 动态内容 -->
+        </div>
+    </div>
+
+    <script>
+        // ========== 词库数据 ==========
+        // 简单难度（差异明显）
+        const easyPairs = [
+            {civilian: "西瓜", spy: "冬瓜"},
+            {civilian: "眉毛", spy: "胡须"},
+            {civilian: "饺子", spy: "包子"},
+            {civilian: "自行车", spy: "电动车"},
+            {civilian: "牛奶", spy: "豆浆"},
+            {civilian: "医生", spy: "护士"},
+            {civilian: "老师", spy: "学生"},
+            {civilian: "手机", spy: "座机"}
+        ];
+
+        // 中等难度（相似度中等）
+        const mediumPairs = [
+            {civilian: "玫瑰", spy: "月季"},
+            {civilian: "小说", spy: "剧本"},
+            {civilian: "地铁", spy: "轻轨"},
+            {civilian: "口红", spy: "唇彩"},
+            {civilian: "香水", spy: "花露水"},
+            {civilian: "保温杯", spy: "水杯"},
+            {civilian: "双眼皮", spy: "单眼皮"},
+            {civilian: "近视眼镜", spy: "墨镜"}
+        ];
+
+        // 困难难度（非常相似）
+        const hardPairs = [
+            {civilian: "包子", spy: "饺子"},
+            {civilian: "橙子", spy: "橘子"},
+            {civilian: "葡萄", spy: "提子"},
+            {civilian: "冰箱", spy: "冰柜"},
+            {civilian: "马", spy: "驴"},
+            {civilian: "小品", spy: "话剧"},
+            {civilian: "导演", spy: "制片人"},
+            {civilian: "微博", spy: "微信"}
+        ];
+
+        // ========== 游戏状态 ==========
+        let gameState = {
+            currentPlayerIndex: 0,
+            playerRoles: [],
+            civilianWord: '',
+            spyWord: '',
+            playerCount: 0
+        };
+
+        // ========== DOM元素 ==========
+        const progressDisplay = document.getElementById('progressDisplay');
+        const contentArea = document.getElementById('contentArea');
+
+        // ========== 初始化游戏 ==========
+        function initGame() {
+            // 从localStorage读取设置
+            const settingsStr = localStorage.getItem('game4_settings');
+            if (!settingsStr) {
+                // 使用默认设置
+                const defaultSettings = {
+                    playerCount: 6,
+                    spyCount: 1,
+                    hasBlank: false,
+                    difficulty: 'medium'
+                };
+                localStorage.setItem('game4_settings', JSON.stringify(defaultSettings));
+                gameState = setupGame(defaultSettings);
+            } else {
+                const settings = JSON.parse(settingsStr);
+                gameState = setupGame(settings);
+            }
+
+            // 显示第一个玩家
+            showPrepareState();
+
+            // 页面淡入动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        }
+
+        // ========== 设置游戏 ==========
+        function setupGame(settings) {
+            const playerCount = settings.playerCount;
+            const spyCount = settings.spyCount;
+            const hasBlank = settings.hasBlank;
+            const difficulty = settings.difficulty;
+
+            // 创建角色数组
+            let roles = [];
+            for (let i = 0; i < spyCount; i++) {
+                roles.push('spy');
+            }
+            if (hasBlank) {
+                roles.push('blank');
+            }
+            while (roles.length < playerCount) {
+                roles.push('civilian');
+            }
+
+            // 打乱角色数组
+            for (let i = roles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [roles[i], roles[j]] = [roles[j], roles[i]];
+            }
+
+            // 根据难度选择词语对
+            let wordPairs;
+            switch (difficulty) {
+                case 'easy':
+                    wordPairs = easyPairs;
+                    break;
+                case 'hard':
+                    wordPairs = hardPairs;
+                    break;
+                default:
+                    wordPairs = mediumPairs;
+            }
+
+            // 随机选择一对词语
+            const selectedPair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+
+            // 保存到localStorage
+            const gameData = {
+                playerRoles: roles,
+                civilianWord: selectedPair.civilian,
+                spyWord: selectedPair.spy,
+                playerCount: playerCount
+            };
+            localStorage.setItem('game4_data', JSON.stringify(gameData));
+
+            return {
+                currentPlayerIndex: 0,
+                playerRoles: roles,
+                civilianWord: selectedPair.civilian,
+                spyWord: selectedPair.spy,
+                playerCount: playerCount
+            };
+        }
+
+        // ========== 显示准备状态（状态A）==========
+        function showPrepareState() {
+            const playerNum = gameState.currentPlayerIndex + 1;
+            progressDisplay.textContent = `${playerNum} / ${gameState.playerCount}`;
+
+            contentArea.innerHTML = `
+                <div class="prepare-text">请第 ${playerNum} 号玩家准备</div>
+                <div class="prepare-hint">其他玩家请暂时回避，不要偷看</div>
+                <button class="btn btn-primary" onclick="showWordState()" style="margin-top: 40px;">
+                    查看我的词语
+                </button>
+            `;
+        }
+
+        // ========== 显示词语状态（状态B）==========
+        function showWordState() {
+            const role = gameState.playerRoles[gameState.currentPlayerIndex];
+            let wordText = '';
+            let wordClass = 'word-text';
+            let hint = '请记住你的词语，不要告诉其他人';
+
+            switch (role) {
+                case 'civilian':
+                    wordText = gameState.civilianWord;
+                    break;
+                case 'spy':
+                    wordText = gameState.spyWord;
+                    break;
+                case 'blank':
+                    wordText = '你是白板';
+                    hint = '你没有获得任何词语，需要伪装自己';
+                    wordClass += ' blank';
+                    break;
+            }
+
+            progressDisplay.textContent = `${gameState.currentPlayerIndex + 1} / ${gameState.playerCount}`;
+
+            contentArea.innerHTML = `
+                <div class="word-display">
+                    <div class="${wordClass}">${wordText}</div>
+                    <div class="word-hint">${hint}</div>
+                </div>
+                <button class="btn btn-primary" onclick="nextPlayer()" style="margin-top: 30px;">
+                    我记住了
+                </button>
+            `;
+        }
+
+        // ========== 下一个玩家 ==========
+        function nextPlayer() {
+            gameState.currentPlayerIndex++;
+
+            if (gameState.currentPlayerIndex >= gameState.playerCount) {
+                // 所有玩家已查看完毕
+                showCompleteState();
+            } else {
+                showPrepareState();
+            }
+        }
+
+        // ========== 显示完成状态（状态C）==========
+        function showCompleteState() {
+            const civilianCount = gameState.playerRoles.filter(r => r === 'civilian').length;
+            const spyCount = gameState.playerRoles.filter(r => r === 'spy').length;
+            const blankCount = gameState.playerRoles.filter(r => r === 'blank').length;
+
+            progressDisplay.textContent = '✓';
+
+            let roleInfoHTML = `
+                <div class="role-item">
+                    <div class="label">平民人数</div>
+                    <div class="count">${civilianCount}人</div>
+                </div>
+                <div class="role-item">
+                    <div class="label">卧底人数</div>
+                    <div class="count">${spyCount}人</div>
+                </div>
+            `;
+
+            if (blankCount > 0) {
+                roleInfoHTML += `
+                    <div class="role-item">
+                        <div class="label">白板人数</div>
+                        <div class="count">${blankCount}人</div>
+                    </div>
+                `;
+            }
+
+            contentArea.innerHTML = `
+                <div class="complete-text">✓ 所有玩家已查看完毕</div>
+                <div class="role-info">
+                    ${roleInfoHTML}
+                </div>
+                <button class="btn btn-success" onclick="startGame()" style="margin-top: 50px;">
+                    开始游戏
+                </button>
+            `;
+        }
+
+        // ========== 开始游戏 ==========
+        function startGame() {
+            window.location.href = 'game4-play.html';
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

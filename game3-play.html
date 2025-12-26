@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你画我猜</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 40px;
+        }
+
+        /* ========== 顶部信息栏 ========== */
+        .header {
+            width: 100%;
+            max-width: 1400px;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 20px;
+            padding: 20px 40px;
+            margin-bottom: 30px;
+            border: 2px solid #FFD700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-item {
+            font-size: 28px;
+            color: #FFF;
+        }
+
+        .header-item .label {
+            color: #FFE082;
+        }
+
+        .timer {
+            font-size: 56px;
+            font-weight: bold;
+            color: #FFD700;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .timer.warning {
+            color: #FF0000;
+            animation: timerBlink 0.5s infinite;
+        }
+
+        @keyframes timerBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.9), rgba(183, 28, 28, 0.9));
+            border-radius: 25px;
+            padding: 50px;
+            border: 3px solid #FFD700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        /* 状态A - 显示词语 */
+        .word-display {
+            text-align: center;
+        }
+
+        .word-text {
+            font-size: 140px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+            animation: wordPop 0.5s ease-out;
+        }
+
+        @keyframes wordPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .word-hint {
+            font-size: 32px;
+            color: #FFE082;
+            margin-bottom: 40px;
+        }
+
+        /* 状态B - 作画提示 */
+        .drawing-hint {
+            text-align: center;
+        }
+
+        .drawing-hint-text {
+            font-size: 64px;
+            font-weight: bold;
+            color: #FFF;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .answer-revealed {
+            margin-top: 40px;
+            font-size: 100px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+            animation: answerReveal 0.5s ease-out;
+        }
+
+        @keyframes answerReveal {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ========== 控制按钮区 ========== */
+        .controls {
+            width: 100%;
+            max-width: 1400px;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 20px;
+            padding: 25px 40px;
+            border: 2px solid #FFD700;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            min-width: 180px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: #FFF;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: linear-gradient(145deg, #66BB6A, #4CAF50);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-info {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: #FFF;
+        }
+
+        .btn-info:hover:not(:disabled) {
+            background: linear-gradient(145deg, #42A5F5, #2196F3);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #FF9800, #F57C00);
+            color: #FFF;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: linear-gradient(145deg, #FFB74D, #FF9800);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #F44336, #D32F2F);
+            color: #FFF;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: linear-gradient(145deg, #EF5350, #F44336);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: linear-gradient(145deg, #A00, #8E0E00);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ========== 计分板 ========== */
+        .scoreboard {
+            width: 100%;
+            max-width: 1400px;
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.95), rgba(100, 0, 0, 0.95));
+            border-radius: 20px;
+            padding: 25px 40px;
+            border: 2px solid #FFD700;
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .team-score {
+            padding: 20px 35px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .team-score.active {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            transform: scale(1.1);
+        }
+
+        .team-score-name {
+            font-size: 26px;
+            color: #FFE082;
+            margin-bottom: 10px;
+        }
+
+        .team-score-points {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .team-score-points.scored {
+            animation: scoreAdd 0.5s ease-out;
+        }
+
+        @keyframes scoreAdd {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); color: #FFF; }
+            100% { transform: scale(1); }
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 30px;
+            opacity: 0.25;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 8%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 15%; right: 6%; animation-delay: 1.2s; }
+        .decoration-3 { bottom: 12%; left: 8%; animation-delay: 2.4s; }
+        .decoration-4 { bottom: 18%; right: 4%; animation-delay: 3.6s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(6deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 1100px) {
+            .word-text { font-size: 100px; }
+            .timer { font-size: 42px; }
+            .btn { font-size: 22px; padding: 15px 30px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🎨</div>
+    <div class="decoration decoration-2">🖌️</div>
+    <div class="decoration decoration-3">🖼️</div>
+    <div class="decoration decoration-4">🎭</div>
+
+    <!-- 顶部信息栏 -->
+    <div class="header">
+        <div class="header-title">🎨 你画我猜</div>
+        <div class="header-info">
+            <div class="header-item">
+                <span class="label">第</span>
+                <span id="currentQuestion">1</span>
+                <span class="label">/</span>
+                <span id="totalQuestions">15</span>
+                <span class="label">题</span>
+            </div>
+            <div class="header-item">
+                <span class="label">当前轮到：</span>
+                <span id="currentTeam">第一组</span>
+            </div>
+            <div class="timer" id="timer">60</div>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content" id="mainContent">
+        <!-- 状态A：显示词语 -->
+        <div class="word-display" id="wordDisplay">
+            <div class="word-text" id="wordText">熊猫</div>
+            <div class="word-hint">画手请记住这个词语，准备好后点击开始作画</div>
+        </div>
+        <!-- 状态B：作画提示 -->
+        <div class="drawing-hint" id="drawingHint" style="display: none;">
+            <div class="drawing-hint-text">画手正在作画，队友请猜词</div>
+            <div class="answer-revealed" id="answerRevealed" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 控制按钮区 -->
+    <div class="controls" id="controls">
+        <button class="btn btn-primary" id="btnStartDrawing">开始作画</button>
+        <button class="btn btn-info" id="btnShowAnswer" style="display: none;">显示答案</button>
+        <button class="btn btn-success" id="btnCorrect" style="display: none;">答对+1分</button>
+        <button class="btn btn-warning" id="btnNext" style="display: none;">下一题</button>
+        <button class="btn btn-info" id="btnRedraw" style="display: none;">重新抽词</button>
+        <button class="btn btn-danger" id="btnEndGame">结束游戏</button>
+        <a href="index.html" class="btn btn-secondary">返回首页</a>
+    </div>
+
+    <!-- 计分板 -->
+    <div class="scoreboard" id="scoreboard">
+        <!-- 动态生成小组计分 -->
+    </div>
+
+    <script>
+        // ========== 题库数据（30个词语）==========
+        const words = [
+            "熊猫", "长颈鹿", "企鹅", "袋鼠", "大象",
+            "自行车", "飞机", "火车", "轮船", "热气球",
+            "西瓜", "草莓", "香蕉", "菠萝", "葡萄",
+            "足球", "篮球", "羽毛球", "乒乓球", "游泳",
+            "电视", "冰箱", "洗衣机", "空调", "电脑",
+            "太阳", "月亮", "星星", "彩虹", "闪电"
+        ];
+
+        // ========== 游戏状态 ==========
+        let gameSettings = null;
+        let gameState = {
+            currentQuestionIndex: 0,
+            currentTeamIndex: 0,
+            scores: [],
+            shuffledWords: [],
+            currentWord: '',
+            timer: null,
+            timeLeft: 60,
+            isDrawing: false,
+            answerShown: false
+        };
+
+        // ========== DOM元素 ==========
+        const currentQuestionEl = document.getElementById('currentQuestion');
+        const totalQuestionsEl = document.getElementById('totalQuestions');
+        const currentTeamEl = document.getElementById('currentTeam');
+        const timerEl = document.getElementById('timer');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const drawingHint = document.getElementById('drawingHint');
+        const wordText = document.getElementById('wordText');
+        const answerRevealed = document.getElementById('answerRevealed');
+        const scoreboard = document.getElementById('scoreboard');
+        const btnStartDrawing = document.getElementById('btnStartDrawing');
+        const btnShowAnswer = document.getElementById('btnShowAnswer');
+        const btnCorrect = document.getElementById('btnCorrect');
+        const btnNext = document.getElementById('btnNext');
+        const btnRedraw = document.getElementById('btnRedraw');
+        const btnEndGame = document.getElementById('btnEndGame');
+
+        // ========== 初始化游戏 ==========
+        function initGame() {
+            // 从localStorage读取设置
+            const settingsStr = localStorage.getItem('game3_settings');
+            if (!settingsStr) {
+                // 使用默认设置
+                gameSettings = {
+                    teamCount: 2,
+                    teamNames: ['第一组', '第二组'],
+                    questionCount: 15,
+                    timeLimit: 60
+                };
+            } else {
+                gameSettings = JSON.parse(settingsStr);
+            }
+
+            // 初始化分数
+            gameState.scores = new Array(gameSettings.teamCount).fill(0);
+
+            // 随机打乱词语并选择指定数量
+            const shuffled = [...words].sort(() => Math.random() - 0.5);
+            gameState.shuffledWords = shuffled.slice(0, gameSettings.questionCount);
+
+            // 更新UI
+            totalQuestionsEl.textContent = gameSettings.questionCount;
+            updateScoreboard();
+            showWordState();
+
+            // 页面淡入动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        }
+
+        // ========== 更新计分板 ==========
+        function updateScoreboard() {
+            scoreboard.innerHTML = '';
+            gameSettings.teamNames.forEach((name, index) => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-score' + (index === gameState.currentTeamIndex ? ' active' : '');
+                teamDiv.innerHTML = `
+                    <div class="team-score-name">${name}</div>
+                    <div class="team-score-points" id="score${index}">${gameState.scores[index]}</div>
+                `;
+                scoreboard.appendChild(teamDiv);
+            });
+            currentTeamEl.textContent = gameSettings.teamNames[gameState.currentTeamIndex];
+        }
+
+        // ========== 显示词语状态（状态A）==========
+        function showWordState() {
+            gameState.isDrawing = false;
+            gameState.answerShown = false;
+            gameState.currentWord = gameState.shuffledWords[gameState.currentQuestionIndex];
+
+            currentQuestionEl.textContent = gameState.currentQuestionIndex + 1;
+            wordText.textContent = gameState.currentWord;
+            wordText.style.animation = 'none';
+            setTimeout(() => wordText.style.animation = 'wordPop 0.5s ease-out', 10);
+
+            wordDisplay.style.display = 'block';
+            drawingHint.style.display = 'none';
+            answerRevealed.style.display = 'none';
+
+            btnStartDrawing.style.display = 'inline-block';
+            btnShowAnswer.style.display = 'none';
+            btnCorrect.style.display = 'none';
+            btnNext.style.display = 'none';
+            btnRedraw.style.display = 'none';
+
+            timerEl.textContent = gameSettings.timeLimit;
+            timerEl.classList.remove('warning');
+        }
+
+        // ========== 开始作画（状态B）==========
+        function startDrawing() {
+            gameState.isDrawing = true;
+
+            wordDisplay.style.display = 'none';
+            drawingHint.style.display = 'block';
+
+            btnStartDrawing.style.display = 'none';
+            btnShowAnswer.style.display = 'inline-block';
+            btnShowAnswer.disabled = false;
+            btnCorrect.style.display = 'inline-block';
+            btnNext.style.display = 'inline-block';
+            btnRedraw.style.display = 'inline-block';
+
+            // 开始倒计时
+            gameState.timeLeft = gameSettings.timeLimit;
+            timerEl.textContent = gameState.timeLeft;
+            gameState.timer = setInterval(updateTimer, 1000);
+        }
+
+        // ========== 更新倒计时 ==========
+        function updateTimer() {
+            gameState.timeLeft--;
+            timerEl.textContent = gameState.timeLeft;
+
+            // 最后10秒红色闪烁
+            if (gameState.timeLeft <= 10) {
+                timerEl.classList.add('warning');
+            }
+
+            // 时间归零
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameState.timer);
+                showAnswer();
+            }
+        }
+
+        // ========== 显示答案 ==========
+        function showAnswer() {
+            if (gameState.answerShown) return;
+            gameState.answerShown = true;
+
+            answerRevealed.textContent = '答案：' + gameState.currentWord;
+            answerRevealed.style.display = 'block';
+            answerRevealed.style.animation = 'none';
+            setTimeout(() => answerRevealed.style.animation = 'answerReveal 0.5s ease-out', 10);
+
+            btnShowAnswer.disabled = true;
+        }
+
+        // ========== 答对加分 ==========
+        function correctAnswer() {
+            clearInterval(gameState.timer);
+
+            // 加分
+            gameState.scores[gameState.currentTeamIndex]++;
+
+            // 加分动画
+            const scoreEl = document.getElementById('score' + gameState.currentTeamIndex);
+            scoreEl.textContent = gameState.scores[gameState.currentTeamIndex];
+            scoreEl.classList.add('scored');
+            setTimeout(() => scoreEl.classList.remove('scored'), 500);
+
+            updateScoreboard();
+
+            // 延迟后下一题
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+
+        // ========== 下一题 ==========
+        function nextQuestion() {
+            clearInterval(gameState.timer);
+
+            gameState.currentQuestionIndex++;
+            gameState.currentTeamIndex = (gameState.currentTeamIndex + 1) % gameSettings.teamCount;
+
+            // 检查游戏是否结束
+            if (gameState.currentQuestionIndex >= gameState.shuffledWords.length) {
+                endGame();
+                return;
+            }
+
+            // 保存游戏状态
+            saveGameState();
+            updateScoreboard();
+            showWordState();
+        }
+
+        // ========== 重新抽词 ==========
+        function redrawWord() {
+            clearInterval(gameState.timer);
+
+            // 从题库中随机选一个新词（替换当前词）
+            const remainingWords = words.filter(w => !gameState.shuffledWords.includes(w) || w === gameState.currentWord);
+            if (remainingWords.length > 0) {
+                const newWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+                gameState.shuffledWords[gameState.currentQuestionIndex] = newWord;
+            }
+
+            showWordState();
+        }
+
+        // ========== 保存游戏状态 ==========
+        function saveGameState() {
+            const stateToSave = {
+                currentQuestionIndex: gameState.currentQuestionIndex,
+                currentTeamIndex: gameState.currentTeamIndex,
+                scores: gameState.scores,
+                shuffledWords: gameState.shuffledWords
+            };
+            localStorage.setItem('game3_state', JSON.stringify(stateToSave));
+        }
+
+        // ========== 游戏结束 ==========
+        function endGame() {
+            // 保存最终结果
+            const result = {
+                teamNames: gameSettings.teamNames,
+                scores: gameState.scores,
+                questionCount: gameSettings.questionCount
+            };
+            localStorage.setItem('game3_result', JSON.stringify(result));
+
+            // 清空游戏状态
+            localStorage.removeItem('game3_state');
+            localStorage.removeItem('game3_settings');
+
+            // 跳转到结算页
+            window.location.href = 'game3-result.html';
+        }
+
+        // ========== 事件监听 ==========
+        btnStartDrawing.addEventListener('click', startDrawing);
+        btnShowAnswer.addEventListener('click', showAnswer);
+        btnCorrect.addEventListener('click', correctAnswer);
+        btnNext.addEventListener('click', nextQuestion);
+        btnRedraw.addEventListener('click', redrawWord);
+        btnEndGame.addEventListener('click', endGame);
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

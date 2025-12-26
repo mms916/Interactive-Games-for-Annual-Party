@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏结束 - 谁是卧底</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow-x: hidden;
+        }
+
+        /* ========== 容器 ========== */
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 30px;
+            padding: 50px 60px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+            text-align: center;
+        }
+
+        /* ========== 游戏结果 ========== */
+        .result-display {
+            margin-bottom: 40px;
+        }
+
+        .result-title {
+            font-size: 64px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            animation: resultPop 0.8s ease-out;
+        }
+
+        @keyframes resultPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-display.civilian-win .result-title {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.5));
+        }
+
+        .result-display.spy-win .result-title {
+            background: linear-gradient(145deg, #F44336, #D32F2F);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.5));
+        }
+
+        .result-display.blank-win .result-title {
+            background: linear-gradient(145deg, #FFD700, #FF9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.5));
+        }
+
+        .result-icon {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 15px;
+            animation: iconBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            75% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* ========== 身份揭晓 ========== */
+        .reveal-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 25px;
+        }
+
+        .player-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .player-item {
+            font-size: 26px;
+            padding: 15px 25px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-number {
+            color: #FFE082;
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        .player-role {
+            font-weight: bold;
+        }
+
+        .player-role.civilian {
+            color: #2196F3;
+        }
+
+        .player-role.spy {
+            color: #F44336;
+        }
+
+        .player-role.blank {
+            color: #FF9800;
+        }
+
+        .player-status {
+            font-size: 22px;
+            color: #AAA;
+        }
+
+        /* ========== 词语公布 ========== */
+        .words-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px 35px;
+            margin-bottom: 40px;
+        }
+
+        .word-item {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #FFE082;
+        }
+
+        .word-item .label {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .word-item .word {
+            color: #FFF;
+        }
+
+        /* ========== 统计信息 ========== */
+        .stats-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px 35px;
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            font-size: 26px;
+            color: #FFE082;
+            margin-bottom: 10px;
+        }
+
+        .stat-item .value {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        /* ========== 按钮区域 ========== */
+        .buttons-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 50px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #A00, #8E0E00);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ========== 庆祝动画 ========== */
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: #FFD700;
+            opacity: 0.8;
+            animation: confettiFall linear forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 30px;
+            opacity: 0.25;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 8%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 15%; right: 6%; animation-delay: 1.2s; }
+        .decoration-3 { bottom: 12%; left: 8%; animation-delay: 2.4s; }
+        .decoration-4 { bottom: 18%; right: 4%; animation-delay: 3.6s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(6deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 900px) {
+            .container {
+                padding: 35px 30px;
+            }
+            .result-title {
+                font-size: 48px;
+            }
+            .player-item {
+                font-size: 22px;
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🕵️</div>
+    <div class="decoration decoration-2">🔍</div>
+    <div class="decoration decoration-3">🎭</div>
+    <div class="decoration decoration-4">🎪</div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 游戏结果 -->
+        <div class="result-display" id="resultDisplay">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <h1 class="result-title" id="resultTitle">游戏结束</h1>
+        </div>
+
+        <!-- 身份揭晓 -->
+        <div class="reveal-section">
+            <h2 class="section-title">🎭 身份揭晓</h2>
+            <ul class="player-list" id="playerList">
+                <!-- 动态生成玩家列表 -->
+            </ul>
+        </div>
+
+        <!-- 词语公布 -->
+        <div class="words-section">
+            <h2 class="section-title">📝 词语公布</h2>
+            <div class="word-item">
+                <span class="label">平民词语：</span>
+                <span class="word" id="civilianWord">玫瑰</span>
+            </div>
+            <div class="word-item">
+                <span class="label">卧底词语：</span>
+                <span class="word" id="spyWord">月季</span>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-section">
+            <h2 class="section-title">📊 游戏统计</h2>
+            <div class="stat-item">总轮数：<span class="value" id="totalRounds">3</span> 轮</div>
+            <div class="stat-item">出局人数：<span class="value" id="outCount">2</span> 人</div>
+        </div>
+
+        <!-- 按钮区域 -->
+        <div class="buttons-container">
+            <a href="game4-setup.html" class="btn btn-primary">再玩一次</a>
+            <a href="index.html" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        // ========== 获取DOM元素 ==========
+        const resultDisplay = document.getElementById('resultDisplay');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultTitle = document.getElementById('resultTitle');
+        const playerList = document.getElementById('playerList');
+        const civilianWordEl = document.getElementById('civilianWord');
+        const spyWordEl = document.getElementById('spyWord');
+        const totalRoundsEl = document.getElementById('totalRounds');
+        const outCountEl = document.getElementById('outCount');
+
+        // ========== 初始化页面 ==========
+        function initPage() {
+            // 从localStorage读取结果
+            const resultStr = localStorage.getItem('game4_result');
+            if (!resultStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const result = JSON.parse(resultStr);
+
+            // 显示游戏结果
+            displayResult(result.gameResult);
+
+            // 显示玩家身份
+            displayPlayers(result);
+
+            // 显示词语
+            civilianWordEl.textContent = result.civilianWord;
+            spyWordEl.textContent = result.spyWord;
+
+            // 显示统计
+            totalRoundsEl.textContent = result.rounds;
+            const outCount = result.playersStatus.filter(s => !s).length;
+            outCountEl.textContent = outCount;
+
+            // 触发庆祝动画
+            setTimeout(createConfetti, 500);
+
+            // 页面淡入动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        }
+
+        // ========== 显示游戏结果 ==========
+        function displayResult(gameResult) {
+            resultDisplay.className = 'result-display';
+
+            switch (gameResult) {
+                case 'civilian_win':
+                    resultDisplay.classList.add('civilian-win');
+                    resultIcon.textContent = '🎊';
+                    resultTitle.textContent = '🎉 平民胜利！🎉';
+                    break;
+                case 'spy_win':
+                    resultDisplay.classList.add('spy-win');
+                    resultIcon.textContent = '🕵️';
+                    resultTitle.textContent = '🎉 卧底胜利！🎉';
+                    break;
+                case 'blank_win':
+                    resultDisplay.classList.add('blank-win');
+                    resultIcon.textContent = '🏆';
+                    resultTitle.textContent = '🎉 白板胜利！🎉';
+                    break;
+                default:
+                    resultTitle.textContent = '游戏结束';
+            }
+        }
+
+        // ========== 显示玩家列表 ==========
+        function displayPlayers(result) {
+            playerList.innerHTML = '';
+
+            for (let i = 0; i < result.playerRoles.length; i++) {
+                const role = result.playerRoles[i];
+                const isAlive = result.playersStatus[i];
+
+                let roleText = '';
+                let roleClass = '';
+                switch (role) {
+                    case 'civilian':
+                        roleText = '平民';
+                        roleClass = 'civilian';
+                        break;
+                    case 'spy':
+                        roleText = '卧底';
+                        roleClass = 'spy';
+                        break;
+                    case 'blank':
+                        roleText = '白板';
+                        roleClass = 'blank';
+                        break;
+                }
+
+                const li = document.createElement('li');
+                li.className = 'player-item';
+                li.innerHTML = `
+                    <span class="player-number">${i + 1}号玩家</span>
+                    <span class="player-role ${roleClass}">${roleText}</span>
+                    <span class="player-status">${isAlive ? '（存活）' : '（出局）'}</span>
+                `;
+                playerList.appendChild(li);
+            }
+        }
+
+        // ========== 创建彩带效果 ==========
+        function createConfetti() {
+            const colors = ['#FFD700', '#FFC107', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1', '#2196F3', '#F44336'];
+            const confettiCount = 100;
+
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

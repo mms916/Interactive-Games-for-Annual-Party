@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏设置 - 你画我猜</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* ========== 容器 ========== */
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 30px;
+            padding: 50px 60px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+        }
+
+        /* ========== 页面标题 ========== */
+        .page-title {
+            font-size: 56px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+            letter-spacing: 4px;
+        }
+
+        /* ========== 设置分组 ========== */
+        .setting-group {
+            margin-bottom: 40px;
+            padding-bottom: 35px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .setting-group:last-child {
+            border-bottom: none;
+            margin-bottom: 30px;
+        }
+
+        .setting-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-title .icon {
+            font-size: 32px;
+        }
+
+        .setting-desc {
+            font-size: 20px;
+            color: #FFE082;
+            margin-bottom: 18px;
+            margin-top: -10px;
+        }
+
+        /* ========== 单选按钮组 ========== */
+        .radio-group {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            accent-color: #FFD700;
+        }
+
+        .radio-option label {
+            font-size: 26px;
+            color: #FFF;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* ========== 小组名称输入框 ========== */
+        .team-names-container {
+            margin-top: 25px;
+        }
+
+        .team-name-input {
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .team-name-input label {
+            font-size: 24px;
+            color: #FFE082;
+            min-width: 100px;
+        }
+
+        .team-name-input input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 22px;
+            border: 2px solid #FFD700;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .team-name-input input:focus {
+            border-color: #FFF;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            background: #FFF;
+        }
+
+        .team-name-input input::placeholder {
+            color: #999;
+        }
+
+        /* ========== 按钮区域 ========== */
+        .buttons-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 18px 50px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #A00, #8E0E00);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 30px;
+            opacity: 0.25;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 8%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 15%; right: 6%; animation-delay: 1.2s; }
+        .decoration-3 { bottom: 12%; left: 8%; animation-delay: 2.4s; }
+        .decoration-4 { bottom: 18%; right: 4%; animation-delay: 3.6s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(6deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 900px) {
+            .container {
+                padding: 35px 30px;
+            }
+            .page-title {
+                font-size: 42px;
+            }
+            .radio-option label {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🎨</div>
+    <div class="decoration decoration-2">🖌️</div>
+    <div class="decoration decoration-3">🖼️</div>
+    <div class="decoration decoration-4">🎭</div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="page-title">游戏设置</h1>
+
+        <!-- 设置表单 -->
+        <form id="setupForm">
+            <!-- 小组数量 -->
+            <div class="setting-group">
+                <h2 class="setting-title">
+                    <span class="icon">👥</span>
+                    小组数量
+                </h2>
+                <div class="radio-group" id="teamCountGroup">
+                    <div class="radio-option">
+                        <input type="radio" id="team2" name="teamCount" value="2" checked>
+                        <label for="team2">2组</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="team3" name="teamCount" value="3">
+                        <label for="team3">3组</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="team4" name="teamCount" value="4">
+                        <label for="team4">4组</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="team5" name="teamCount" value="5">
+                        <label for="team5">5组</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="team6" name="teamCount" value="6">
+                        <label for="team6">6组</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每组名称（可选） -->
+            <div class="setting-group">
+                <h2 class="setting-title">
+                    <span class="icon">✏️</span>
+                    小组名称（可选）
+                </h2>
+                <p class="setting-desc">留空则使用默认名称：第一组、第二组...</p>
+                <div class="team-names-container" id="teamNamesContainer">
+                    <!-- 动态生成小组名称输入框 -->
+                </div>
+            </div>
+
+            <!-- 题目数量 -->
+            <div class="setting-group">
+                <h2 class="setting-title">
+                    <span class="icon">📝</span>
+                    题目数量
+                </h2>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="q10" name="questionCount" value="10">
+                        <label for="q10">10题</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="q15" name="questionCount" value="15" checked>
+                        <label for="q15">15题</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="q20" name="questionCount" value="20">
+                        <label for="q20">20题</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每题时长 -->
+            <div class="setting-group">
+                <h2 class="setting-title">
+                    <span class="icon">⏱️</span>
+                    每题时长
+                </h2>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="t30" name="timeLimit" value="30">
+                        <label for="t30">30秒</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="t60" name="timeLimit" value="60" checked>
+                        <label for="t60">60秒</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="t90" name="timeLimit" value="90">
+                        <label for="t90">90秒</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按钮区域 -->
+            <div class="buttons-container">
+                <button type="submit" class="btn btn-primary">开始游戏</button>
+                <a href="game3-rule.html" class="btn btn-secondary">返回</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 默认小组名称
+        const defaultTeamNames = ['第一组', '第二组', '第三组', '第四组', '第五组', '第六组'];
+
+        // 获取DOM元素
+        const teamCountGroup = document.getElementById('teamCountGroup');
+        const teamNamesContainer = document.getElementById('teamNamesContainer');
+        const setupForm = document.getElementById('setupForm');
+
+        // 根据小组数量动态生成名称输入框
+        function updateTeamNameInputs() {
+            const teamCount = parseInt(document.querySelector('input[name="teamCount"]:checked').value);
+            teamNamesContainer.innerHTML = '';
+
+            for (let i = 0; i < teamCount; i++) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'team-name-input';
+                inputDiv.innerHTML = `
+                    <label>第${i + 1}组：</label>
+                    <input type="text"
+                           name="teamName${i}"
+                           placeholder="请输入小组名称（可选）"
+                           data-index="${i}">
+                `;
+                teamNamesContainer.appendChild(inputDiv);
+            }
+        }
+
+        // 监听小组数量变化
+        teamCountGroup.addEventListener('change', updateTeamNameInputs);
+
+        // 表单提交处理
+        setupForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 获取表单数据
+            const teamCount = parseInt(document.querySelector('input[name="teamCount"]:checked').value);
+            const questionCount = parseInt(document.querySelector('input[name="questionCount"]:checked').value);
+            const timeLimit = parseInt(document.querySelector('input[name="timeLimit"]:checked').value);
+
+            // 获取小组名称
+            const teamNameInputs = document.querySelectorAll('input[name^="teamName"]');
+            const teamNames = [];
+            teamNameInputs.forEach((input, index) => {
+                const name = input.value.trim();
+                teamNames.push(name || defaultTeamNames[index]);
+            });
+
+            // 保存到localStorage
+            const gameSettings = {
+                teamCount: teamCount,
+                teamNames: teamNames,
+                questionCount: questionCount,
+                timeLimit: timeLimit
+            };
+
+            localStorage.setItem('game3_settings', JSON.stringify(gameSettings));
+
+            // 跳转到游戏页面
+            window.location.href = 'game3-play.html';
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+
+            // 初始化小组名称输入框
+            updateTeamNameInputs();
+        });
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

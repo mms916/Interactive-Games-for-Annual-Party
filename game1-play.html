@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谐音梗挑战</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 40px;
+        }
+
+        /* ========== 顶部状态栏 ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 30px;
+            padding: 20px 40px;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.9), rgba(183, 28, 28, 0.9));
+            border-radius: 20px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-name {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .question-info {
+            font-size: 28px;
+            color: #FFF;
+        }
+
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4CAF50;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        /* 倒计时警告样式 - 红色闪烁 */
+        .timer-warning {
+            color: #FF0000;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ========== 游戏区域 ========== */
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* ========== 图片区域 ========== */
+        .images-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        .image-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .question-image {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(145deg, #666, #444);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #AAA;
+            border: 4px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            object-fit: cover;
+        }
+
+        .arrow {
+            font-size: 60px;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ========== 提示文字 ========== */
+        .hint-text {
+            font-size: 32px;
+            color: #FFE082;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* ========== 答案区域 ========== */
+        .answer-area {
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .answer-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            padding: 20px 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 3px solid #FFD700;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s ease;
+        }
+
+        .answer-text.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ========== 控制按钮区域 ========== */
+        .controls-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            padding: 18px 40px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-show {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: #FFF;
+        }
+
+        .btn-correct {
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            color: #FFF;
+        }
+
+        .btn-next {
+            background: linear-gradient(145deg, #FF9800, #F57C00);
+            color: #FFF;
+        }
+
+        .btn-skip {
+            background: linear-gradient(145deg, #9E9E9E, #757575);
+            color: #FFF;
+        }
+
+        .btn-end {
+            background: linear-gradient(145deg, #F44336, #D32F2F);
+            color: #FFF;
+        }
+
+        .btn-home {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .control-btn:hover:not(:disabled), .btn-home:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========== 状态栏 ========== */
+        .status-bar {
+            display: flex;
+            gap: 60px;
+            justify-content: center;
+            font-size: 28px;
+            color: #FFF;
+            padding: 20px 50px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-label {
+            color: #FFE082;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        /* ========== 加分动画 ========== */
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #FFD700; }
+            100% { transform: scale(1); }
+        }
+
+        .score-pop {
+            animation: scorePop 0.4s ease-out;
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 1100px) {
+            .images-container {
+                flex-direction: column;
+                gap: 30px;
+            }
+            .arrow {
+                transform: rotate(90deg);
+            }
+            .question-image {
+                width: 300px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="header">
+        <div class="game-name">谐音梗挑战</div>
+        <div class="question-info">第 <span id="currentNum">1</span>/20 题</div>
+        <div class="timer" id="timer">30</div>
+    </div>
+
+    <!-- 游戏区域 -->
+    <div class="game-area">
+        <!-- 图片区域 -->
+        <div class="images-container">
+            <div class="image-wrapper">
+                <img id="image1" class="question-image" src="" alt="图片1" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="question-image" style="display: none;">图片1</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="image-wrapper">
+                <img id="image2" class="question-image" src="" alt="图片2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="question-image" style="display: none;">图片2</div>
+            </div>
+        </div>
+
+        <!-- 提示文字 -->
+        <div class="hint-text" id="hintText"></div>
+
+        <!-- 答案区域 -->
+        <div class="answer-area">
+            <div class="answer-text" id="answerText"></div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="controls-area">
+            <button class="control-btn btn-show" id="btnShow" onclick="showAnswer()">显示答案</button>
+            <button class="control-btn btn-correct" id="btnCorrect" onclick="answerCorrect()">答对+1分</button>
+            <button class="control-btn btn-next" id="btnNext" onclick="nextQuestion()">下一题</button>
+            <button class="control-btn btn-skip" id="btnSkip" onclick="skipQuestion()">跳过</button>
+            <button class="control-btn btn-end" onclick="endGame()">结束游戏</button>
+            <a href="index.html" class="control-btn btn-home">返回首页</a>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">当前得分：</span>
+                <span class="status-value" id="score">0</span> 分
+            </div>
+            <div class="status-item">
+                <span class="status-label">已跳过：</span>
+                <span class="status-value" id="skipped">0</span>/3 次
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 配置常量 ==========
+        const IMAGE_PATH = 'images/game1/';  // 图片基础路径
+        const TOTAL_TIME = 30;  // 每题时间（秒）
+        const MAX_SKIP = 3;  // 最大跳过次数
+        const TOTAL_QUESTIONS = 20;  // 总题数
+
+        // ========== 题库数据 ==========
+        const questions = [
+            {id: 1, image1: "q1-1.jpg", image2: "q1-2.jpg", hint: "这是瓶 + 这是...", answer: "躺平"},
+            {id: 2, image1: "q2-1.jpg", image2: "q2-2.jpg", hint: "这是彩虹 + 这是...", answer: "彩虹屁"},
+            {id: 3, image1: "q3-1.jpg", image2: "q3-2.jpg", hint: "这是马 + 这是...", answer: "二维码"},
+            {id: 4, image1: "q4-1.jpg", image2: "q4-2.jpg", hint: "这是蛋 + 这是...", answer: "扯蛋"},
+            {id: 5, image1: "q5-1.jpg", image2: "q5-2.jpg", hint: "这是包 + 这是...", answer: "打包"},
+            {id: 6, image1: "q6-1.jpg", image2: "q6-2.jpg", hint: "这是火 + 这是...", answer: "火腿肠"},
+            {id: 7, image1: "q7-1.jpg", image2: "q7-2.jpg", hint: "这是狗 + 这是...", answer: "热狗"},
+            {id: 8, image1: "q8-1.jpg", image2: "q8-2.jpg", hint: "这是凳子 + 这是...", answer: "邓紫棋"},
+            {id: 9, image1: "q9-1.jpg", image2: "q9-2.jpg", hint: "这是公鸡 + 这是...", answer: "肱二头肌"},
+            {id: 10, image1: "q10-1.jpg", image2: "q10-2.jpg", hint: "这是花 + 这是...", answer: "梅花"},
+            {id: 11, image1: "q11-1.jpg", image2: "q11-2.jpg", hint: "这是蛋糕 + 这是...", answer: "龟苓膏"},
+            {id: 12, image1: "q12-1.jpg", image2: "q12-2.jpg", hint: "这是鹅 + 这是...", answer: "俄罗斯"},
+            {id: 13, image1: "q13-1.jpg", image2: "q13-2.jpg", hint: "这是墙 + 这是...", answer: "防火墙"},
+            {id: 14, image1: "q14-1.jpg", image2: "q14-2.jpg", hint: "这是房 + 这是...", answer: "破防"},
+            {id: 15, image1: "q15-1.jpg", image2: "q15-2.jpg", hint: "这是馕 + 这是...", answer: "囊中羞涩"},
+            {id: 16, image1: "q16-1.jpg", image2: "q16-2.jpg", hint: "这是馕 + 这是...", answer: "气囊"},
+            {id: 17, image1: "q17-1.jpg", image2: "q17-2.jpg", hint: "这是馕 + 这是...", answer: "行囊"},
+            {id: 18, image1: "q18-1.jpg", image2: "q18-2.jpg", hint: "这是π + 这是...", answer: "反派"},
+            {id: 19, image1: "q19-1.jpg", image2: "q19-2.jpg", hint: "这是钳 + 这是...", answer: "没钱"},
+            {id: 20, image1: "q20-1.jpg", image2: "q20-2.jpg", hint: "这是羊 + 这是...", answer: "杨过"},
+            {id: 21, image1: "q21-1.jpg", image2: "q21-2.jpg", hint: "这是老鼠 + 这是...", answer: "老鼠药"},
+            {id: 22, image1: "q22-1.jpg", image2: "q22-2.jpg", hint: "这是白鸟 + 这是...", answer: "纸尿裤"},
+            {id: 23, image1: "q23-1.jpg", image2: "q23-2.jpg", hint: "这是柴犬 + 这是...", answer: "财源滚滚"},
+            {id: 24, image1: "q24-1.jpg", image2: "q24-2.jpg", hint: "这是好 + 这是...", answer: "好土"},
+            {id: 25, image1: "q25-1.jpg", image2: "q25-2.jpg", hint: "这是鸡 + 这是...", answer: "叫花鸡"},
+            {id: 26, image1: "q26-1.jpg", image2: "q26-2.jpg", hint: "这是8只鹤 + 这是...", answer: "迈巴赫"},
+            {id: 27, image1: "q27-1.jpg", image2: "q27-2.jpg", hint: "这是骨 + 这是...", answer: "反骨"},
+            {id: 28, image1: "q28-1.jpg", image2: "q28-2.jpg", hint: "这是粽 + 这是...", answer: "举重"},
+            {id: 29, image1: "q29-1.jpg", image2: "q29-2.jpg", hint: "这是箱 + 这是...", answer: "行李箱"},
+            {id: 30, image1: "q30-1.jpg", image2: "q30-2.jpg", hint: "这是鲤鱼 + 这是...", answer: "不可理喻"},
+            {id: 31, image1: "q31-1.jpg", image2: "q31-2.jpg", hint: "这是酒 + 这是...", answer: "好久不见"},
+            {id: 32, image1: "q32-1.jpg", image2: "q32-2.jpg", hint: "这是马 + 这是...", answer: "马云"},
+            {id: 33, image1: "q33-1.jpg", image2: "q33-2.jpg", hint: "这是虾 + 这是...", answer: "下落不明"},
+            {id: 34, image1: "q34-1.jpg", image2: "q34-2.jpg", hint: "这是小强 + 这是...", answer: "强人所难"},
+            {id: 35, image1: "q35-1.jpg", image2: "q35-2.jpg", hint: "这是蟹 + 这是...", answer: "巨蟹座"},
+            {id: 36, image1: "q36-1.jpg", image2: "q36-2.jpg", hint: "这是鸡蛋 + 这是...", answer: "鸡蛋灌饼"},
+            {id: 37, image1: "q37-1.jpg", image2: "q37-2.jpg", hint: "这是蛇和牛 + 这是...", answer: "社牛"},
+            {id: 38, image1: "q38-1.jpg", image2: "q38-2.jpg", hint: "这是夹子和金币 + 这是...", answer: "假币"},
+            {id: 39, image1: "q39-1.jpg", image2: "q39-2.jpg", hint: "这是鸡 + 这是...", answer: "椒麻鸡/叫花鸡"},
+            {id: 40, image1: "q40-1.jpg", image2: "q40-2.jpg", hint: "这是星 + 这是...", answer: "鸿星尔克"},
+            {id: 41, image1: "q41-1.jpg", image2: "q41-2.jpg", hint: "这是星 + 这是...", answer: "星巴克"},
+            {id: 42, image1: "q42-1.jpg", image2: "q42-2.jpg", hint: "这是狼 + 这是...", answer: "蟑螂"},
+            {id: 43, image1: "q43-1.jpg", image2: "q43-2.jpg", hint: "这是礼帽 + 这是...", answer: "没礼貌"},
+            {id: 44, image1: "q44-1.jpg", image2: "q44-2.jpg", hint: "这是马 + 这是...", answer: "立马滚蛋"},
+            {id: 45, image1: "q45-1.jpg", image2: "q45-2.jpg", hint: "这是鸡 + 这是...", answer: "拖拉机"},
+            {id: 46, image1: "q46-1.jpg", image2: "q46-2.jpg", hint: "这是铁盒 + 这是...", answer: "半岛铁盒"},
+            {id: 47, image1: "q47-1.jpg", image2: "q47-2.jpg", hint: "这是狮子 + 这是...", answer: "摄影师"},
+            {id: 48, image1: "q48-1.jpg", image2: "q48-2.jpg", hint: "这是芝士 + 这是...", answer: "知识盲区"},
+            {id: 49, image1: "q49-1.jpg", image2: "q49-2.jpg", hint: "这是泥 + 这是...", answer: "比基尼"},
+            {id: 50, image1: "q50-1.jpg", image2: "q50-2.jpg", hint: "这是鸡 + 这是...", answer: "摄像机"},
+            {id: 51, image1: "q51-1.jpg", image2: "q51-2.jpg", hint: "这是羊 + 这是...", answer: "杨千嬅"},
+            {id: 52, image1: "q52-1.jpg", image2: "q52-2.jpg", hint: "这是鲨 + 这是...", answer: "沙雕"},
+            {id: 53, image1: "q53-1.jpg", image2: "q53-2.jpg", hint: "这是狮子 + 这是...", answer: "律师"},
+            {id: 54, image1: "q54-1.jpg", image2: "q54-2.jpg", hint: "这是牛 + 这是...", answer: "牛排"},
+            {id: 55, image1: "q55-1.jpg", image2: "q55-2.jpg", hint: "这是鱿鱼 + 这是...", answer: "三克油"},
+            {id: 56, image1: "q56-1.jpg", image2: "q56-2.jpg", hint: "这是圆 + 这是...", answer: "二次元"},
+            {id: 57, image1: "q57-1.jpg", image2: "q57-2.jpg", hint: "这是桶 + 这是...", answer: "垃圾桶"},
+            {id: 58, image1: "q58-1.jpg", image2: "q58-2.jpg", hint: "这是鼠 + 这是...", answer: "麻薯"},
+            {id: 59, image1: "q59-1.jpg", image2: "q59-2.jpg", hint: "这是辣 + 这是...", answer: "拉拉裤"},
+            {id: 60, image1: "q60-1.jpg", image2: "q60-2.jpg", hint: "这是鲨鱼 + 这是...", answer: "手刹"},
+            {id: 61, image1: "q61-1.jpg", image2: "q61-2.jpg", hint: "这是鸭 + 这是...", answer: "压岁钱"},
+            {id: 62, image1: "q62-1.jpg", image2: "q62-2.jpg", hint: "这是凯蒂猫 + 这是...", answer: "凯迪拉克"},
+            {id: 63, image1: "q63-1.jpg", image2: "q63-2.jpg", hint: "这是恐龙 + 这是...", answer: "社恐"},
+            {id: 64, image1: "q64-1.jpg", image2: "q64-2.jpg", hint: "这是鸡 + 这是...", answer: "电视机"},
+            {id: 65, image1: "q65-1.jpg", image2: "q65-2.jpg", hint: "这是马 + 这是...", answer: "马杀鸡"},
+            {id: 66, image1: "q66-1.jpg", image2: "q66-2.jpg", hint: "这是蛋 + 这是...", answer: "捣蛋鬼"},
+            {id: 67, image1: "q67-1.jpg", image2: "q67-2.jpg", hint: "这是猪 + 这是...", answer: "诸葛亮"},
+            {id: 68, image1: "q68-1.jpg", image2: "q68-2.jpg", hint: "这是叉 + 这是...", answer: "插座"},
+            {id: 69, image1: "q69-1.jpg", image2: "q69-2.jpg", hint: "这是虾 + 这是...", answer: "虾滑"},
+            {id: 70, image1: "q70-1.jpg", image2: "q70-2.jpg", hint: "这是蕉 + 这是...", answer: "焦虑"},
+            {id: 71, image1: "q71-1.jpg", image2: "q71-2.jpg", hint: "这是屈原 + 这是...", answer: "屈指可数"},
+            {id: 72, image1: "q72-1.jpg", image2: "q72-2.jpg", hint: "这是青梅 + 这是...", answer: "青梅竹马"},
+            {id: 73, image1: "q73-1.jpg", image2: "q73-2.jpg", hint: "这是鹅 + 这是...", answer: "恶有恶报"},
+            {id: 74, image1: "q74-1.jpg", image2: "q74-2.jpg", hint: "这是蚊子 + 这是...", answer: "文质彬彬"},
+            {id: 75, image1: "q75-1.jpg", image2: "q75-2.jpg", hint: "这是猫 + 这是...", answer: "火冒三丈"},
+            {id: 76, image1: "q76-1.jpg", image2: "q76-2.jpg", hint: "这是六 + 这是...", answer: "老六"},
+            {id: 77, image1: "q77-1.jpg", image2: "q77-2.jpg", hint: "这是心 + 这是...", answer: "夹心"},
+            {id: 78, image1: "q78-1.jpg", image2: "q78-2.jpg", hint: "这是南瓜 + 这是...", answer: "难上加难"},
+            {id: 79, image1: "q79-1.jpg", image2: "q79-2.jpg", hint: "这是气球 + 这是...", answer: "告白气球"},
+            {id: 80, image1: "q80-1.jpg", image2: "q80-2.jpg", hint: "这是马 + 这是...", answer: "马拉松"},
+            {id: 81, image1: "q81-1.jpg", image2: "q81-2.jpg", hint: "这是羊 + 这是...", answer: "易烊千玺"},
+            {id: 82, image1: "q82-1.jpg", image2: "q82-2.jpg", hint: "这是马 + 这是...", answer: "白龙马"},
+            {id: 83, image1: "q83-1.jpg", image2: "q83-2.jpg", hint: "这是葵 + 这是...", answer: "一举夺魁"},
+            {id: 84, image1: "q84-1.jpg", image2: "q84-2.jpg", hint: "这是鲨 + 这是...", answer: "杀手锏"},
+            {id: 85, image1: "q85-1.jpg", image2: "q85-2.jpg", hint: "这是橙子 + 这是...", answer: "心想事成"},
+            {id: 86, image1: "q86-1.jpg", image2: "q86-2.jpg", hint: "这是鞋 + 这是...", answer: "足力健"},
+            {id: 87, image1: "q87-1.jpg", image2: "q87-2.jpg", hint: "这是蕉 + 这是...", answer: "焦头烂额"},
+            {id: 88, image1: "q88-1.jpg", image2: "q88-2.jpg", hint: "这是马 + 这是...", answer: "牛马"},
+            {id: 89, image1: "q89-1.jpg", image2: "q89-2.jpg", hint: "这是ABC + 这是...", answer: "没关系"},
+            {id: 90, image1: "q90-1.jpg", image2: "q90-2.jpg", hint: "这是托尼斯塔克 + 这是...", answer: "泥带水"},
+            {id: 91, image1: "q91-1.jpg", image2: "q91-2.jpg", hint: "这是小夫 + 这是...", answer: "一夫当关"},
+            {id: 92, image1: "q92-1.jpg", image2: "q92-2.jpg", hint: "这是鸡爪 + 这是...", answer: "泡椒凤爪"},
+            {id: 93, image1: "q93-1.jpg", image2: "q93-2.jpg", hint: "这是桃 + 这是...", answer: "插翅难逃"},
+            {id: 94, image1: "q94-1.jpg", image2: "q94-2.jpg", hint: "这是饭 + 这是...", answer: "通缉犯"},
+            {id: 95, image1: "q95-1.jpg", image2: "q95-2.jpg", hint: "这是王 + 这是...", answer: "王珞丹"},
+            {id: 96, image1: "q96-1.jpg", image2: "q96-2.jpg", hint: "这是虎 + 这是...", answer: "武松打虎"},
+            {id: 97, image1: "q97-1.jpg", image2: "q97-2.jpg", hint: "这是松许 + 这是...", answer: "许嵩"},
+            {id: 98, image1: "q98-1.jpg", image2: "q98-2.jpg", hint: "这是鲨 + 这是...", answer: "沙琪玛"},
+            {id: 99, image1: "q99-1.jpg", image2: "q99-2.jpg", hint: "这是小强 + 这是...", answer: "强强联手"},
+            {id: 100, image1: "q100-1.jpg", image2: "q100-2.jpg", hint: "这是小丑 + 这是...", answer: "小丑竟是我自己"}
+        ];
+
+        // ========== 游戏状态变量 ==========
+        let currentIndex = 0;  // 当前题号索引
+        let score = 0;  // 当前得分
+        let skipped = 0;  // 跳过次数
+        let correct = 0;  // 答对题数
+        let shuffledQuestions = [];  // 打乱后的题目顺序
+        let timer = null;  // 倒计时定时器
+        let timeLeft = TOTAL_TIME;  // 剩余时间
+        let answerShown = false;  // 答案是否已显示
+
+        // ========== 初始化游戏 ==========
+        function initGame() {
+            // 检查是否已有进行中的游戏
+            const savedIndex = localStorage.getItem('game1_currentIndex');
+            const savedScore = localStorage.getItem('game1_score');
+            const savedSkipped = localStorage.getItem('game1_skipped');
+            const savedCorrect = localStorage.getItem('game1_correct');
+            const savedShuffled = localStorage.getItem('game1_shuffled');
+
+            if (savedIndex !== null) {
+                // 恢复游戏状态
+                currentIndex = parseInt(savedIndex);
+                score = parseInt(savedScore);
+                skipped = parseInt(savedSkipped);
+                correct = parseInt(savedCorrect);
+                shuffledQuestions = JSON.parse(savedShuffled);
+            } else {
+                // 新游戏：从题库中随机抽取20道题并打乱顺序
+                const allIndices = [...Array(questions.length).keys()];
+                shuffledQuestions = shuffleArray(allIndices).slice(0, TOTAL_QUESTIONS);
+                saveGameState();
+            }
+
+            loadQuestion();
+            startTimer();
+        }
+
+        // ========== 题目数组打乱算法 ==========
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // ========== 加载当前题目 ==========
+        function loadQuestion() {
+            if (currentIndex >= shuffledQuestions.length) {
+                // 游戏结束，跳转到结算页
+                endGame();
+                return;
+            }
+
+            const questionIndex = shuffledQuestions[currentIndex];
+            const question = questions[questionIndex];
+
+            // 更新图片
+            document.getElementById('image1').src = IMAGE_PATH + question.image1;
+            document.getElementById('image2').src = IMAGE_PATH + question.image2;
+
+            // 更新提示文字
+            document.getElementById('hintText').textContent = question.hint;
+
+            // 更新题号
+            document.getElementById('currentNum').textContent = currentIndex + 1;
+
+            // 更新分数和跳过次数
+            updateScoreDisplay();
+
+            // 重置答案显示
+            answerShown = false;
+            document.getElementById('answerText').textContent = question.answer;
+            document.getElementById('answerText').classList.remove('show');
+            document.getElementById('btnShow').disabled = false;
+        }
+
+        // ========== 更新分数显示 ==========
+        function updateScoreDisplay() {
+            const scoreEl = document.getElementById('score');
+            const skippedEl = document.getElementById('skipped');
+            scoreEl.textContent = score;
+            skippedEl.textContent = skipped;
+
+            // 更新跳过按钮状态
+            const btnSkip = document.getElementById('btnSkip');
+            if (skipped >= MAX_SKIP) {
+                btnSkip.disabled = true;
+            } else {
+                btnSkip.disabled = false;
+            }
+        }
+
+        // ========== 倒计时功能 ==========
+        function startTimer() {
+            timeLeft = TOTAL_TIME;
+            updateTimerDisplay();
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                // 最后10秒红色闪烁警告
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').classList.add('timer-warning');
+                }
+
+                // 时间归零
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    if (!answerShown) {
+                        showAnswer();  // 自动显示答案但不跳转
+                    }
+                }
+            }, 1000);
+        }
+
+        // ========== 更新倒计时显示 ==========
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = timeLeft;
+        }
+
+        // ========== 显示答案 ==========
+        function showAnswer() {
+            if (answerShown) return;
+            answerShown = true;
+            document.getElementById('answerText').classList.add('show');
+            document.getElementById('btnShow').disabled = true;
+        }
+
+        // ========== 答对+1分 ==========
+        function answerCorrect() {
+            if (!answerShown) {
+                showAnswer();
+            }
+            score++;
+            correct++;
+            saveGameState();
+
+            // 加分动画
+            const scoreEl = document.getElementById('score');
+            scoreEl.classList.add('score-pop');
+            setTimeout(() => scoreEl.classList.remove('score-pop'), 400);
+
+            // 延迟后进入下一题
+            setTimeout(() => {
+                goToNextQuestion();
+            }, 1500);
+        }
+
+        // ========== 下一题（不加分） ==========
+        function nextQuestion() {
+            goToNextQuestion();
+        }
+
+        // ========== 跳过题目 ==========
+        function skipQuestion() {
+            if (skipped >= MAX_SKIP) return;
+            skipped++;
+            saveGameState();
+            goToNextQuestion();
+        }
+
+        // ========== 跳转下一题 ==========
+        function goToNextQuestion() {
+            currentIndex++;
+            saveGameState();
+
+            // 重置倒计时
+            document.getElementById('timer').classList.remove('timer-warning');
+            startTimer();
+
+            loadQuestion();
+        }
+
+        // ========== 保存游戏状态到localStorage ==========
+        function saveGameState() {
+            localStorage.setItem('game1_currentIndex', currentIndex);
+            localStorage.setItem('game1_score', score);
+            localStorage.setItem('game1_skipped', skipped);
+            localStorage.setItem('game1_correct', correct);
+            localStorage.setItem('game1_shuffled', JSON.stringify(shuffledQuestions));
+        }
+
+        // ========== 游戏结束 ==========
+        function endGame() {
+            clearInterval(timer);
+            // 保存最终统计数据
+            localStorage.setItem('game1_total', shuffledQuestions.length);
+            localStorage.setItem('game1_finalScore', score);
+            localStorage.setItem('game1_finalCorrect', correct);
+            localStorage.setItem('game1_finalSkipped', skipped);
+            // 跳转到结算页
+            window.location.href = 'game1-result.html';
+        }
+
+        // ========== 页面加载完成后初始化 ==========
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

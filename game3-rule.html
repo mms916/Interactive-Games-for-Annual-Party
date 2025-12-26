@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你画我猜</title>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E0E00 0%, #1F1C18 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* ========== 容器 ========== */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(211, 47, 47, 0.95), rgba(183, 28, 28, 0.95));
+            border-radius: 30px;
+            padding: 50px 60px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #FFD700;
+        }
+
+        /* ========== 页面标题 ========== */
+        .page-title {
+            font-size: 56px;
+            font-weight: bold;
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+            letter-spacing: 4px;
+        }
+
+        /* ========== 规则区域 ========== */
+        .rules-section {
+            margin-bottom: 40px;
+        }
+
+        .rules-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .rules-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rule-item {
+            font-size: 24px;
+            color: #FFF;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .rule-item::before {
+            content: '🎨';
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 22px;
+        }
+
+        /* ========== 游戏流程区域 ========== */
+        .process-section {
+            margin-bottom: 40px;
+        }
+
+        .process-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 25px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .process-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: process-counter;
+        }
+
+        .process-item {
+            font-size: 22px;
+            color: #FFE082;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            padding-left: 50px;
+            position: relative;
+        }
+
+        .process-item::before {
+            counter-increment: process-counter;
+            content: counter(process-counter);
+            position: absolute;
+            left: 0;
+            width: 35px;
+            height: 35px;
+            background: #FFD700;
+            color: #8E0E00;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* ========== 注意事项 ========== */
+        .notice-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 40px;
+            border-left: 5px solid #FFD700;
+        }
+
+        .notice-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+
+        .notice-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .notice-item {
+            font-size: 22px;
+            color: #FFF;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .notice-item::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+
+        /* ========== 示例区域 ========== */
+        .example-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .example-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+
+        .example-content {
+            font-size: 24px;
+            color: #FFE082;
+        }
+
+        /* ========== 按钮区域 ========== */
+        .buttons-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 50px;
+            font-size: 26px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #FFC107);
+            color: #8E0E00;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #FFF, #FFD700);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #8E0E00, #6D0C0C);
+            color: #FFF;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #A00, #8E0E00);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* ========== 装饰元素 ========== */
+        .decoration {
+            position: fixed;
+            font-size: 30px;
+            opacity: 0.25;
+            animation: decorationFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .decoration-1 { top: 8%; left: 5%; animation-delay: 0s; }
+        .decoration-2 { top: 15%; right: 6%; animation-delay: 1.2s; }
+        .decoration-3 { bottom: 12%; left: 8%; animation-delay: 2.4s; }
+        .decoration-4 { bottom: 18%; right: 4%; animation-delay: 3.6s; }
+
+        @keyframes decorationFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(6deg);
+            }
+        }
+
+        /* ========== 响应式适配 ========== */
+        @media (max-width: 900px) {
+            .container {
+                padding: 35px 30px;
+            }
+            .page-title {
+                font-size: 42px;
+            }
+            .rule-item {
+                font-size: 20px;
+            }
+            .process-item {
+                font-size: 19px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration decoration-1">🎨</div>
+    <div class="decoration decoration-2">🖌️</div>
+    <div class="decoration decoration-3">🖼️</div>
+    <div class="decoration decoration-4">🎭</div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="page-title">你画我猜</h1>
+
+        <!-- 游戏规则 -->
+        <div class="rules-section">
+            <h2 class="rules-title">游戏规则</h2>
+            <ul class="rules-list">
+                <li class="rule-item">参赛者分为若干小组（每组2-4人）</li>
+                <li class="rule-item">每组派一人作为画手，其他人作为猜词者</li>
+                <li class="rule-item">画手抽取关键词后，在白板/纸上作画（不能说话、不能写字）</li>
+                <li class="rule-item">队友根据画作猜出关键词</li>
+                <li class="rule-item">每题限时60秒</li>
+                <li class="rule-item">猜对+1分，猜错或超时不扣分</li>
+                <li class="rule-item">本轮共15题，得分最多的小组获胜</li>
+            </ul>
+        </div>
+
+        <!-- 游戏流程 -->
+        <div class="process-section">
+            <h2 class="process-title">游戏流程</h2>
+            <ul class="process-list">
+                <li class="process-item">选择小组数量（2-6组）</li>
+                <li class="process-item">点击"抽取词语"按钮，大屏显示词语</li>
+                <li class="process-item">画手看词后点击"开始作画"，词语消失，倒计时开始</li>
+                <li class="process-item">画手作画，队友猜词</li>
+                <li class="process-item">猜对后主持人点击"答对+1分"，猜错或超时点击"下一题"</li>
+            </ul>
+        </div>
+
+        <!-- 注意事项 -->
+        <div class="notice-section">
+            <h2 class="notice-title">注意事项</h2>
+            <ul class="notice-list">
+                <li class="notice-item">画手不能说话、不能写字、不能用手势比划</li>
+                <li class="notice-item">可以画任何相关的图形或符号</li>
+                <li class="notice-item">队友可以随意猜测</li>
+            </ul>
+        </div>
+
+        <!-- 示例展示 -->
+        <div class="example-section">
+            <h2 class="example-title">示例</h2>
+            <div class="example-content">
+                <p><strong>词语：</strong>熊猫</p>
+                <p><strong>画手画出：</strong>黑白相间的圆形动物、竹子等</p>
+            </div>
+        </div>
+
+        <!-- 按钮区域 -->
+        <div class="buttons-container">
+            <a href="game3-setup.html" class="btn btn-primary">设置游戏</a>
+            <a href="game3-play.html" class="btn btn-outline">直接开始</a>
+            <a href="index.html" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后添加淡入动画
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+
+    <!-- 音乐控制器 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="./music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="music-controller" id="musicController">
+        <div class="music-icon" id="musicIcon">🎵</div>
+    </div>
+
+    <style>
+        .music-controller {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .music-controller:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            border-color: rgba(255, 215, 0, 0.9);
+        }
+        .music-icon {
+            font-size: 30px;
+            color: #FFD700;
+            transition: all 0.3s ease;
+        }
+        .music-controller.playing .music-icon {
+            animation: musicRotate 3s linear infinite;
+        }
+        @keyframes musicRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .music-controller.playing::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            animation: musicPulse 1.5s ease-out infinite;
+        }
+        @keyframes musicPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .music-controller {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+            .music-icon {
+                font-size: 24px;
+            }
+        }
+    </style>
+
+    <script>
+        const MUSIC_CONFIG = { volume: 0.5, autoPlay: true, storageKey: 'bgMusicPlaying' };
+        class MusicController {
+            constructor() {
+                this.audio = document.getElementById('bgMusic');
+                this.controller = document.getElementById('musicController');
+                this.icon = document.getElementById('musicIcon');
+                this.isPlaying = false;
+                this.userInteracted = false;
+                this.init();
+            }
+            init() {
+                this.audio.volume = MUSIC_CONFIG.volume;
+                const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+                if (savedState === 'true') {
+                    this.isPlaying = true;
+                    this.updateUI();
+                }
+                this.controller.addEventListener('click', () => this.toggle());
+                document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+                document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+                this.audio.addEventListener('ended', () => {
+                    this.audio.currentTime = 0;
+                    this.audio.play();
+                });
+            }
+            handleFirstInteraction() {
+                if (this.userInteracted) return;
+                this.userInteracted = true;
+                if (this.isPlaying) this.play();
+            }
+            toggle() {
+                this.userInteracted = true;
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+            play() {
+                const playPromise = this.audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.isPlaying = true;
+                        this.saveState();
+                        this.updateUI();
+                    }).catch(() => {
+                        this.isPlaying = false;
+                        this.updateUI();
+                    });
+                }
+            }
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.saveState();
+                this.updateUI();
+            }
+            saveState() {
+                localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+            }
+            updateUI() {
+                if (this.isPlaying) {
+                    this.controller.classList.add('playing');
+                    this.icon.textContent = '🎵';
+                } else {
+                    this.controller.classList.remove('playing');
+                    this.icon.textContent = '🔇';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.musicControllerInstance) {
+                window.musicControllerInstance = new MusicController();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!--
+    ==================== 背景音乐控制器 ====================
+    将此代码片段复制到每个HTML文件的 </body> 标签之前
+    ========================================================
+-->
+
+<!-- 音乐播放器（隐藏） -->
+<audio id="bgMusic" loop preload="auto">
+    <!-- 方案A：使用在线音乐（推荐） -->
+    <source src="https://music.163.com/song/media/outer/url?id=186016.mp3" type="audio/mpeg">
+    <!-- 方案B：使用本地音乐文件 -->
+    <!-- <source src="./music/background.mp3" type="audio/mpeg"> -->
+</audio>
+
+<!-- 音乐控制器按钮 -->
+<div class="music-controller" id="musicController">
+    <div class="music-icon" id="musicIcon">🎵</div>
+</div>
+
+<!-- 音乐控制器样式 -->
+<style>
+    .music-controller {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        border: 2px solid rgba(255, 215, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 9999;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .music-controller:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        border-color: rgba(255, 215, 0, 0.9);
+    }
+
+    .music-icon {
+        font-size: 30px;
+        color: #FFD700;
+        transition: all 0.3s ease;
+    }
+
+    /* 播放时的旋转动画 */
+    .music-controller.playing .music-icon {
+        animation: musicRotate 3s linear infinite;
+    }
+
+    @keyframes musicRotate {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* 音波动画（播放时显示） */
+    .music-controller.playing::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 215, 0, 0.4);
+        animation: musicPulse 1.5s ease-out infinite;
+    }
+
+    @keyframes musicPulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+        .music-controller {
+            width: 50px;
+            height: 50px;
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .music-icon {
+            font-size: 24px;
+        }
+    }
+</style>
+
+<!-- 音乐控制器JavaScript -->
+<script>
+    // ========== 音乐控制器配置 ==========
+    const MUSIC_CONFIG = {
+        volume: 0.5,           // 默认音量：50%
+        autoPlay: true,        // 是否自动播放
+        storageKey: 'bgMusicPlaying'  // localStorage存储键名
+    };
+
+    // ========== 音乐控制器类 ==========
+    class MusicController {
+        constructor() {
+            this.audio = document.getElementById('bgMusic');
+            this.controller = document.getElementById('musicController');
+            this.icon = document.getElementById('musicIcon');
+            this.isPlaying = false;
+            this.userInteracted = false;
+
+            this.init();
+        }
+
+        init() {
+            // 设置音量
+            this.audio.volume = MUSIC_CONFIG.volume;
+
+            // 从localStorage读取播放状态
+            const savedState = localStorage.getItem(MUSIC_CONFIG.storageKey);
+            if (savedState === 'true') {
+                this.isPlaying = true;
+                this.updateUI();
+            }
+
+            // 绑定点击事件
+            this.controller.addEventListener('click', () => this.toggle());
+
+            // 监听用户首次交互，尝试自动播放
+            document.addEventListener('click', () => this.handleFirstInteraction(), { once: true });
+            document.addEventListener('keydown', () => this.handleFirstInteraction(), { once: true });
+
+            // 监听音频播放结束（循环播放）
+            this.audio.addEventListener('ended', () => {
+                this.audio.currentTime = 0;
+                this.audio.play();
+            });
+
+            // 页面可见性变化时处理播放
+            document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+        }
+
+        handleFirstInteraction() {
+            if (this.userInteracted) return;
+            this.userInteracted = true;
+
+            // 如果之前是播放状态，则恢复播放
+            if (this.isPlaying) {
+                this.play();
+            }
+        }
+
+        handleVisibilityChange() {
+            // 页面隐藏时暂停，显示时恢复（可选）
+            // if (document.hidden && this.isPlaying) {
+            //     this.audio.pause();
+            // } else if (!document.hidden && this.isPlaying && this.userInteracted) {
+            //     this.audio.play();
+            // }
+        }
+
+        toggle() {
+            this.userInteracted = true;
+
+            if (this.isPlaying) {
+                this.pause();
+            } else {
+                this.play();
+            }
+        }
+
+        play() {
+            const playPromise = this.audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.isPlaying = true;
+                    this.saveState();
+                    this.updateUI();
+                }).catch(error => {
+                    console.log('播放失败，需要用户交互:', error);
+                    this.isPlaying = false;
+                    this.updateUI();
+                });
+            }
+        }
+
+        pause() {
+            this.audio.pause();
+            this.isPlaying = false;
+            this.saveState();
+            this.updateUI();
+        }
+
+        saveState() {
+            localStorage.setItem(MUSIC_CONFIG.storageKey, this.isPlaying.toString());
+        }
+
+        updateUI() {
+            if (this.isPlaying) {
+                this.controller.classList.add('playing');
+                this.icon.textContent = '🎵';
+            } else {
+                this.controller.classList.remove('playing');
+                this.icon.textContent = '🔇';
+            }
+        }
+    }
+
+    // ========== 页面加载完成后初始化音乐控制器 ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        // 避免重复初始化
+        if (!window.musicControllerInstance) {
+            window.musicControllerInstance = new MusicController();
+        }
+    });
+</script>
+
+<!--
+    ==================== 使用说明 ====================
+    1. 将以上代码完整复制到每个HTML文件的 </body> 标签之前
+    2. 确保每个页面只引入一次此代码
+    3. 音乐文件可根据需要修改：
+       - 使用在线音乐：修改 <source> 标签的 src 属性
+       - 使用本地音乐：取消注释本地文件路径，并准备音乐文件
+    ==================================================
+-->
